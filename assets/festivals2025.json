@@ -1,21 +1,25 @@
 [
     {
-        "date": "2025-07-26",
+        "date": "26 జులై, 2025 (2025-07-26)",
+        "Thidi": "విదియ",
+        "year" : "శ్రీ విశ్వా వసు",
         "festivals": [
             "Varalakshmi Vratam",
             "Sankashti Chaturthi"
         ]
     },
     {
-        "date": "2025-07-27",
+        "date": "27 జులై, 2025 (2025-07-27)",
+        "Thidi": "తదియ",
+        "year" : "శ్రీ విశ్వా వసు",
         "festivals": [
-            "Pradosham"
+                        
         ]
     },
     {
-        "date": "2025-07-28",
-        "festivals": [
-            "Purnima"
-        ]
+        "date": "28 జులై, 2025 (2025-07-28)",
+        "Thidi": "చవితి",
+        "year" : "శ్రీ విశ్వా వసు",
+        "festivals": []
     }
 ]
