@@ -7,6 +7,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 object WidgetUtils {
+    data class WidgetInfo(
+        val date: String,
+        val thidi: String,
+        val year: String,
+        val todayFestivals: List<String>,
+        val nextLines: List<String>
+    )
     fun readFestivalData(context: Context): List<FestivalDay> {
         val json = context.assets.open("festivals2025.json").bufferedReader().use { it.readText() }
         val type = object : TypeToken<List<FestivalDay>>() {}.type
@@ -65,5 +72,43 @@ object WidgetUtils {
 
         return if (lines.isNotEmpty()) lines.joinToString("\n")
         else "ఈ రోజు మరియు వచ్చే రెండు రోజుల్లో పండుగలు లేవు"
+    }
+
+    fun getWidgetInfo(context: Context): WidgetInfo {
+        val allDays = readFestivalData(context)
+
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val today = LocalDate.now()
+        val todayIso = today.format(formatter)
+        val next1Iso = today.plusDays(1).format(formatter)
+        val next2Iso = today.plusDays(2).format(formatter)
+
+        fun findDayByIso(iso: String): FestivalDay? =
+            allDays.firstOrNull { extractIsoDate(it.date) == iso }
+
+        val todayDay = findDayByIso(todayIso)
+        val dateStr = todayDay?.date ?: todayIso
+        val thidi = todayDay?.Thidi ?: ""
+        val year = todayDay?.year ?: ""
+        val todayFestivals = todayDay?.festivals?.filter { it.isNotBlank() } ?: emptyList()
+
+        val nextLines = mutableListOf<String>()
+        listOf(next1Iso, next2Iso).forEach { iso ->
+            val d = findDayByIso(iso)
+            if (d != null) {
+                val fests = d.festivals.filter { it.isNotBlank() }
+                if (fests.isNotEmpty()) {
+                    nextLines += "${d.date}: ${fests.first()}"
+                }
+            }
+        }
+
+        return WidgetInfo(
+            date = dateStr,
+            thidi = thidi,
+            year = year,
+            todayFestivals = todayFestivals,
+            nextLines = nextLines
+        )
     }
 }
