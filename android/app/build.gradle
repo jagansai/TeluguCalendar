@@ -124,3 +124,12 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// Copy the single-source festivals JSON into the Android assets for the widget before building
+def repoRoot = rootDir.parentFile
+tasks.register('copyFestivalJson', Copy) {
+    from file("${repoRoot}/assets/festivals2025.json")
+    into file("${projectDir}/src/main/assets")
+}
+
+preBuild.dependsOn copyFestivalJson

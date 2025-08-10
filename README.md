@@ -32,6 +32,25 @@ npm run android
 yarn android
 ```
 
+#### Android build with single-source JSON (widget sync)
+
+This project keeps a single source of truth for festival data at `assets/festivals2025.json`.
+On Android builds, the file is copied into `android/app/src/main/assets/` so the widget can read it.
+
+Use the script to build and ensure the file is synced:
+
+```sh
+# Debug build
+npm run android:build
+
+# Release build
+npm run android:build:release
+```
+
+Notes:
+- The Gradle build also runs the copy step automatically via the `preBuild` hook.
+- You can still use `npm run android` to install & run; for CI or manual builds prefer the script above.
+
 ### iOS
 
 For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).

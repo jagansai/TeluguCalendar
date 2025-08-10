@@ -19,7 +19,7 @@ function getTodayAndNextTwoDates(): string[] {
 
 
 import { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, PermissionsAndroid, Button } from "react-native";
+import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, PermissionsAndroid } from "react-native";
 import notifee, { TimestampTrigger, TriggerType, AndroidImportance, AndroidColor } from '@notifee/react-native';
 
 // Helper to create channel and schedule notification for 6 AM
@@ -77,7 +77,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+  // Transparent to let inner translucent components be apparent
+  backgroundColor: 'transparent',
   },
   header: {
     fontSize: 24,
@@ -91,7 +92,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 20,
     borderRadius: 14,
-    backgroundColor: '#fff8e1',
+  // Soft translucent card background
+  backgroundColor: 'rgba(255, 248, 225, 0.9)',
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ffe082'
+  borderColor: 'rgba(255, 224, 130, 0.6)'
   },
   cardDate: {
     fontSize: 20,
@@ -108,18 +110,28 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   cardThidi: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 2
+  fontSize: 16,
+  color: '#333',
+  marginBottom: 2,
+  width: '100%',
+  textAlign: 'left',
+  lineHeight: 24,
+  paddingVertical: 2,
+  includeFontPadding: true
   },
   cardThidiValue: {
     fontWeight: 'bold',
     color: '#1976d2'
   },
   cardYear: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 8
+  fontSize: 16,
+  color: '#333',
+  marginBottom: 8,
+  width: '100%',
+  textAlign: 'left',
+  lineHeight: 22,
+  paddingVertical: 2,
+  includeFontPadding: true
   },
   cardYearValue: {
     fontWeight: 'bold',
@@ -150,14 +162,22 @@ const styles = StyleSheet.create({
     marginTop: 18,
     padding: 14,
     borderRadius: 10,
-    backgroundColor: '#e3f2fd',
+  backgroundColor: 'rgba(227, 242, 253, 0.9)',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#90caf9',
+  borderColor: 'rgba(144, 202, 249, 0.6)',
     shadowColor: '#1976d2',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3
+  },
+  // Subtle translucent gray chrome to hint this is a widget container
+  widgetChrome: {
+  backgroundColor: 'rgba(0,0,0,0.12)',
+    borderRadius: 16,
+    padding: 8,
+  borderWidth: 1,
+  borderColor: 'rgba(0,0,0,0.15)'
   },
   upcomingLabel: {
     fontSize: 16,
@@ -209,7 +229,7 @@ const App = () => {
       }
       try {
         // Use require to load the bundled JSON asset
-        const allDays: FestivalDay[] = require('./festivals2025.json');
+        const allDays: FestivalDay[] = require('./assets/festivals2025.json');
         const wantedDates = getTodayAndNextTwoDates();
         // Extract the (YYYY-MM-DD) part from the date string in JSON
         // Only show the current day
@@ -232,92 +252,56 @@ const App = () => {
     setup();
   }, []);
 
-  // Find all unique festivals in the next 2 days
-  const allDays: FestivalDay[] = require('./festivals2025.json');
+  // Compute next-2-days entries that actually have festivals
+  const allDays: FestivalDay[] = require('./assets/festivals2025.json');
   const wantedDates = getTodayAndNextTwoDates();
-  const nextTwoDays = allDays.filter(day => {
+  const nextTwoDaysWithFestivals = allDays.filter(day => {
     const match = day.date.match(/\((\d{4}-\d{2}-\d{2})\)/);
     if (!match) return false;
-    return wantedDates.slice(1).includes(match[1]);
+    const isNextTwo = wantedDates.slice(1).includes(match[1]);
+    return isNextTwo && Array.isArray(day.festivals) && day.festivals.length > 0;
   });
-  const nextFestivals = Array.from(new Set(nextTwoDays.flatMap(day => day.festivals)));
-
-
-  // Test notification function
-  async function sendTestNotification() {
-    await notifee.displayNotification({
-      title: 'Test Notification',
-      body: 'This is a test notification from Telugu Festival Reminder.',
-      android: {
-        channelId: 'festival-reminder',
-        smallIcon: 'ic_launcher',
-        color: '#512da8',
-        pressAction: { id: 'default' },
-      },
-    });
-  }
-
-  // Schedule a notification 2 minutes from now for easier testing
-  async function scheduleNotificationIn2Min() {
-    const now = new Date();
-    const triggerTime = new Date(now.getTime() + 2 * 60 * 1000); // 2 minutes from now
-    const trigger: TimestampTrigger = {
-      type: TriggerType.TIMESTAMP,
-      timestamp: triggerTime.getTime(),
-      alarmManager: true,
-    };
-    await notifee.createTriggerNotification(
-      {
-        title: 'Scheduled Test Notification',
-        body: 'This notification was scheduled 2 minutes ago.',
-        android: {
-          channelId: 'festival-reminder',
-          smallIcon: 'ic_launcher',
-          color: '#512da8',
-          pressAction: { id: 'default' },
-        },
-      },
-      trigger
-    );
-  }
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <Text style={styles.header}>📅 Telugu Festival Reminder</Text>
-      <Button title="Send Test Notification" onPress={sendTestNotification} />
-      <View style={{ height: 10 }} />
-      <Button title="Schedule Notification in 2 Minutes" onPress={scheduleNotificationIn2Min} />
+  <Text style={styles.header}>Telugu Festival Reminder</Text>
       {error ? (
         <Text style={styles.error}>{error}</Text>
       ) : (
         festivalDays.length > 0 && (
-          <>
+          <View style={styles.widgetChrome}>
             <View style={styles.card}>
-              <Text style={styles.cardDate}>{festivalDays[0].date}</Text>
-              <Text style={styles.cardThidi}><Text style={styles.cardThidiValue}>{festivalDays[0].Thidi}</Text></Text>
-              <Text style={styles.cardYear}><Text style={styles.cardYearValue}>{festivalDays[0].year}</Text></Text>
-              {festivalDays[0].festivals.length > 0 ? (
+              {/* Today block with Telugu labels */}
+              <Text style={styles.cardDate}>ఈ రోజు: {festivalDays[0].date}</Text>
+              <Text style={styles.cardThidi}>తిది: {String(festivalDays[0].Thidi || '')}</Text>
+              <Text style={styles.cardYear}>సం: {String(festivalDays[0].year || '')}</Text>
+
+              {/* Only show header and list if there are any festivals today */}
+              {festivalDays[0].festivals.length > 0 && (
                 <View style={styles.festivalList}>
+                  <Text style={styles.upcomingLabel}>పండుగలు:</Text>
                   {festivalDays[0].festivals.map(fest => (
                     <Text key={fest} style={styles.festivalItem}>🎉 {fest}</Text>
                   ))}
                 </View>
-              ) : (
-                <Text style={styles.noFestival}>No festivals today.</Text>
               )}
             </View>
-            {nextFestivals.length > 0 && (
+
+            {/* Next 2 days: show only entries that have at least one festival */}
+            {nextTwoDaysWithFestivals.length > 0 && (
               <View style={styles.upcomingBox}>
-                <Text style={styles.upcomingLabel}>Upcoming Festivals</Text>
+                <Text style={styles.upcomingLabel}>రాబోయే పండుగలు (2 రోజుల్లో):</Text>
                 <View style={styles.upcomingList}>
-                  {nextFestivals.map(fest => (
-                    <Text key={fest} style={styles.upcomingValue}>🔔 {fest}</Text>
+                  {nextTwoDaysWithFestivals.map(day => (
+                    <Text key={day.date} style={styles.upcomingValue}>
+                      {day.date}: {day.festivals[0]}
+                    </Text>
                   ))}
                 </View>
               </View>
             )}
-          </>
+          </View>
         )
       )}
     </View>

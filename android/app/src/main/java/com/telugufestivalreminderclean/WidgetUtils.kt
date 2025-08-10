@@ -25,17 +25,45 @@ object WidgetUtils {
 
     fun getUpcomingFestivals(context: Context): String {
         val allDays = readFestivalData(context)
-        val wantedDates = getTodayAndNextTwoDates().drop(1)
 
-        val nextFestivals = allDays.filter { day ->
-            val isoDate = extractIsoDate(day.date)
-            isoDate != null && wantedDates.contains(isoDate)
-        }.flatMap { it.festivals }.distinct()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val today = LocalDate.now()
+        val todayIso = today.format(formatter)
+        val next1Iso = today.plusDays(1).format(formatter)
+        val next2Iso = today.plusDays(2).format(formatter)
 
-        return if (nextFestivals.isNotEmpty()) {
-            "రాబోయే పండుగలు:\n" + nextFestivals.joinToString(", ")
-        } else {
-            "ఈ రెండు రోజుల్లో పండుగలు లేవు"
+        fun findDayByIso(iso: String): FestivalDay? =
+            allDays.firstOrNull { extractIsoDate(it.date) == iso }
+
+    val lines = mutableListOf<String>()
+
+        // Today
+        val todayDay = findDayByIso(todayIso)
+        val todayFestivals = todayDay?.festivals?.filter { it.isNotBlank() } ?: emptyList()
+        if (todayDay != null) {
+            val thidi = todayDay.Thidi
+            val year = todayDay.year
+            lines += "ఈ రోజు: ${todayDay.date}"
+            lines += "తిది: ${thidi}"
+            lines += "సం: ${year}"
+            if (todayFestivals.isNotEmpty()) {
+                lines += "పండుగలు: " + todayFestivals.joinToString(", ")
+            }
         }
+
+        // Next two days (only include days that actually have festivals)
+        listOf(next1Iso, next2Iso).forEach { iso ->
+            val d = findDayByIso(iso)
+            if (d != null) {
+                val fests = d.festivals.filter { it.isNotBlank() }
+                if (fests.isNotEmpty()) {
+                    // Show as: date: first festival
+                    lines += "${d.date}: ${fests.first()}"
+                }
+            }
+        }
+
+        return if (lines.isNotEmpty()) lines.joinToString("\n")
+        else "ఈ రోజు మరియు వచ్చే రెండు రోజుల్లో పండుగలు లేవు"
     }
 }

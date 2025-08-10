@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+  "android:build": "pwsh -File ./scripts/build-android.ps1",
+  "android:build:release": "pwsh -File ./scripts/build-android.ps1 -Release",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",

@@ -5,16 +5,16 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="10dp"
-    android:background="@android:color/white">
+    android:background="@drawable/widget_bg">
 
     <TextView
         android:id="@+id/widgetText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="ఈరోజు పండుగలు"
-        android:textSize="16sp"
+    android:textSize="15sp"
         android:lineSpacingExtra="4dp"
-        android:textColor="#000000"
+    android:textColor="#FFFFFFFF"
         android:fontFamily="sans-serif"
         android:gravity="center" />
 </LinearLayout>
