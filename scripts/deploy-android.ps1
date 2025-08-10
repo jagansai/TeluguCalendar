@@ -5,6 +5,8 @@ param(
   [switch]$SkipBuild,
   [switch]$WhatIf,
   [switch]$Release,
+  [ValidateSet('apk','aab')]
+  [string]$Format,
   [switch]$StartMetro,
   [int]$MetroPort = 8081
 )
@@ -96,13 +98,14 @@ function Ensure-DeviceOnline {
 }
 
 function Build-App {
-  param([string]$Variant)
+  param([string]$Variant, [string]$Format)
   $repo = Get-RepoRoot
   $buildScript = Join-Path $repo 'scripts/build-android.ps1'
   if (-not (Test-Path $buildScript)) { throw "Build script not found: $buildScript" }
   if ($WhatIf) { Write-Step "DRY RUN: would build Android ($Variant)"; return }
   if ($Variant -eq 'release') {
-    & pwsh -File $buildScript -Release
+    if ($Format) { & pwsh -File $buildScript -Release -Format $Format }
+    else { & pwsh -File $buildScript -Release }
   } else {
     & pwsh -File $buildScript
   }
@@ -183,7 +186,24 @@ function Main {
     Ensure-AdbReverse -Adb $adb -Port $MetroPort
   }
 
-  if (-not $SkipBuild) { Build-App -Variant $Variant }
+  # Decide effective output format for build/install flow
+  $effectiveFormat = $Format
+  if (-not $effectiveFormat) {
+    # Default to APK for install flows; only build AAB when explicitly requested
+    $effectiveFormat = ($Variant -eq 'release') ? 'apk' : ''
+  }
+
+  if (-not $SkipBuild) { Build-App -Variant $Variant -Format $effectiveFormat }
+
+  # If building an AAB, skip install and just report the output path
+  if ($Variant -eq 'release' -and $effectiveFormat -eq 'aab') {
+    $repo = Get-RepoRoot
+    $aab = Join-Path $repo 'android/app/build/outputs/bundle/release/app-release.aab'
+    if (-not (Test-Path $aab)) { throw "AAB not found at $aab" }
+    Write-Step "AAB built: $aab"
+    Write-Step 'Done.'
+    return
+  }
 
   $apk = Get-ApkPath -Variant $Variant
   Write-Step "APK: $apk"

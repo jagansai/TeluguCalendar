@@ -3,6 +3,7 @@
 
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
   <application
     android:name=".MainApplication"
@@ -13,9 +14,13 @@
     android:theme="@style/AppTheme"
     android:supportsRtl="true">
     <receiver android:name=".FestivalWidgetProvider"
-      android:exported="false">
+      android:exported="true">
       <intent-filter>
         <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        <action android:name="android.intent.action.DATE_CHANGED" />
+        <action android:name="android.intent.action.TIME_CHANGED" />
+        <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
       </intent-filter>
       <meta-data
         android:name="android.appwidget.provider"
