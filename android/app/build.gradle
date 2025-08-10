@@ -91,6 +91,11 @@ android {
         versionCode 1
         versionName "1.0"
     }
+    def hasUploadCreds = project.hasProperty('MYAPP_UPLOAD_STORE_FILE') &&
+            project.hasProperty('MYAPP_UPLOAD_KEY_ALIAS') &&
+            project.hasProperty('MYAPP_UPLOAD_STORE_PASSWORD') &&
+            project.hasProperty('MYAPP_UPLOAD_KEY_PASSWORD')
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -98,15 +103,22 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (hasUploadCreds) {
+                storeFile file(MYAPP_UPLOAD_STORE_FILE)
+                storePassword MYAPP_UPLOAD_STORE_PASSWORD
+                keyAlias MYAPP_UPLOAD_KEY_ALIAS
+                keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Uses upload keystore if provided via Gradle properties, otherwise falls back to debug keystore.
+            signingConfig hasUploadCreds ? signingConfigs.release : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

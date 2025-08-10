@@ -19,7 +19,9 @@ function getTodayAndNextTwoDates(): string[] {
 
 
 import { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, PermissionsAndroid } from "react-native";
+import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, PermissionsAndroid, Pressable } from "react-native";
+import { NativeModules } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import notifee, { TimestampTrigger, TriggerType, AndroidImportance, AndroidColor } from '@notifee/react-native';
 
 // Helper to create channel and schedule notification for 6 AM
@@ -195,6 +197,21 @@ const styles = StyleSheet.create({
     color: '#1976d2',
     marginBottom: 2
   },
+  hint: {
+    backgroundColor: '#e8f5e9',
+    borderColor: '#a5d6a7',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12
+  },
+  hintTitle: { fontWeight: 'bold', color: '#2e7d32', marginBottom: 4 },
+  hintBody: { color: '#2e7d32', marginBottom: 8 },
+  hintActions: { flexDirection: 'row' },
+  hintButton: { backgroundColor: '#2e7d32', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, marginRight: 8 },
+  hintButtonText: { color: 'white', fontWeight: '600' },
+  hintDismiss: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#2e7d32' },
+  hintDismissText: { color: '#2e7d32', fontWeight: '600' }
 });
 
 type FestivalDay = {
@@ -208,9 +225,11 @@ const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
   const [festivalDays, setFestivalDays] = useState<FestivalDay[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showWidgetHint, setShowWidgetHint] = useState(false);
+  const [canPin, setCanPin] = useState(false);
 
   useEffect(() => {
-    async function setup() {
+  async function setup() {
       // Request notification permission for Android 13+
       if (Platform.OS === 'android' && Platform.Version >= 33) {
         try {
@@ -248,6 +267,16 @@ const App = () => {
       } catch (e) {
         setError('Failed to load festival data.');
       }
+      // Widget hint logic
+      try {
+        const dismissed = await AsyncStorage.getItem('widgetHintDismissed');
+        let supported = false;
+        if (Platform.OS === 'android' && (NativeModules as any).WidgetPin?.isPinSupported) {
+          supported = await (NativeModules as any).WidgetPin.isPinSupported();
+        }
+        setCanPin(supported);
+        setShowWidgetHint(!dismissed && supported);
+      } catch {}
     }
     setup();
   }, []);
@@ -266,6 +295,39 @@ const App = () => {
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
   <Text style={styles.header}>Telugu Festival Reminder</Text>
+      {showWidgetHint && (
+        <View style={styles.hint}>
+          <Text style={styles.hintTitle}>Add the home screen widget</Text>
+          <Text style={styles.hintBody}>
+            Get today’s Telugu festivals at a glance. Add the “Telugu Festival Reminder” widget to your home screen.
+          </Text>
+          <View style={styles.hintActions}>
+            {canPin && (
+              <Pressable
+                onPress={async () => {
+                  try {
+                    await (NativeModules as any).WidgetPin.requestPin();
+                    await AsyncStorage.setItem('widgetHintDismissed', '1');
+                    setShowWidgetHint(false);
+                  } catch {}
+                }}
+                style={styles.hintButton}
+              >
+                <Text style={styles.hintButtonText}>Add widget</Text>
+              </Pressable>
+            )}
+            <Pressable
+              onPress={async () => {
+                await AsyncStorage.setItem('widgetHintDismissed', '1');
+                setShowWidgetHint(false);
+              }}
+              style={[styles.hintButton, styles.hintDismiss]}
+            >
+              <Text style={styles.hintDismissText}>Not now</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
       {error ? (
         <Text style={styles.error}>{error}</Text>
       ) : (
