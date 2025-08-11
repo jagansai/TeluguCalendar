@@ -51,8 +51,8 @@ object WidgetUtils {
             val thidi = todayDay.Thidi
             val year = todayDay.year
             lines += "ఈ రోజు: ${todayDay.date}"
-            lines += "తిది: ${thidi}"
             lines += "సం: ${year}"
+            lines += "తిథి: ${thidi}"
             if (todayFestivals.isNotEmpty()) {
                 lines += "పండుగలు: " + todayFestivals.joinToString(", ")
             }

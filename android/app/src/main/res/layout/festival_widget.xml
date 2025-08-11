@@ -20,6 +20,19 @@
         android:paddingTop="2dp"
         android:paddingBottom="2dp" />
 
+    <!-- Year (keep size same as before) -->
+    <TextView
+        android:id="@+id/tvYear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFFFF"
+        android:textSize="15sp"
+        android:lineSpacingExtra="2dp"
+        android:fontFamily="sans-serif"
+        android:gravity="center"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp" />
+
     <!-- Thidi (increase font) -->
     <TextView
         android:id="@+id/tvThidi"
@@ -34,18 +47,6 @@
         android:paddingTop="2dp"
         android:paddingBottom="2dp" />
 
-    <!-- Year (keep size same as before) -->
-    <TextView
-        android:id="@+id/tvYear"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#FFFFFFFF"
-        android:textSize="15sp"
-        android:lineSpacingExtra="2dp"
-        android:fontFamily="sans-serif"
-        android:gravity="center"
-        android:paddingTop="2dp"
-        android:paddingBottom="2dp" />
 
     <!-- Festivals today (increase font) -->
     <TextView

@@ -336,7 +336,7 @@ const App = () => {
             <View style={styles.card}>
               {/* Today block with Telugu labels */}
               <Text style={styles.cardDate}>ఈ రోజు: {festivalDays[0].date}</Text>
-              <Text style={styles.cardThidi}>తిది: {String(festivalDays[0].Thidi || '')}</Text>
+              <Text style={styles.cardThidi}>తిథి: {String(festivalDays[0].Thidi || '')}</Text>
               <Text style={styles.cardYear}>సం: {String(festivalDays[0].year || '')}</Text>
 
               {/* Only show header and list if there are any festivals today */}

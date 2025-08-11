@@ -19,7 +19,7 @@ class FestivalWidgetProvider : AppWidgetProvider() {
             // Date
             views.setTextViewText(R.id.tvDate, "ఈ రోజు: ${info.date}")
             // Thidi
-            views.setTextViewText(R.id.tvThidi, "తిది: ${info.thidi}")
+            views.setTextViewText(R.id.tvThidi, "తిథి: ${info.thidi}")
             // Year
             views.setTextViewText(R.id.tvYear, "సం: ${info.year}")
             // Festivals today
