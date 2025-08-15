@@ -9,6 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import java.util.Calendar
+import android.text.Html
+import android.os.Build
 
 class FestivalWidgetProvider : AppWidgetProvider() {
 
@@ -25,14 +27,26 @@ class FestivalWidgetProvider : AppWidgetProvider() {
             // Festivals today
             if (info.todayFestivals.isNotEmpty()) {
                 views.setViewVisibility(R.id.tvFestivals, android.view.View.VISIBLE)
-                views.setTextViewText(R.id.tvFestivals, "పండుగలు: " + info.todayFestivals.joinToString(", "))
+                val festivalsText = "పండుగలు: " + info.todayFestivals.joinToString(", ") { fest -> "<font color='#ffd74f'>${fest}</font>" }
+                val spanned = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Html.fromHtml(festivalsText, Html.FROM_HTML_MODE_LEGACY) else Html.fromHtml(festivalsText)
+                views.setTextViewText(R.id.tvFestivals, spanned)
             } else {
                 views.setViewVisibility(R.id.tvFestivals, android.view.View.GONE)
             }
             // Next days
             if (info.nextLines.isNotEmpty()) {
                 views.setViewVisibility(R.id.tvNext, android.view.View.VISIBLE)
-                views.setTextViewText(R.id.tvNext, info.nextLines.joinToString("\n"))
+                // Each next line already formatted as "Date: Festival"; color festival part red
+                val coloredLines = info.nextLines.joinToString("\n") { line ->
+                    val idx = line.indexOf(": ")
+                    if (idx >= 0) {
+                        val left = line.substring(0, idx + 2)
+                        val fest = line.substring(idx + 2)
+                        "${left}<font color='#ffd74f'>${fest}</font>"
+                    } else line
+                }
+                val sp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Html.fromHtml(coloredLines, Html.FROM_HTML_MODE_LEGACY) else Html.fromHtml(coloredLines)
+                views.setTextViewText(R.id.tvNext, sp)
             } else {
                 views.setViewVisibility(R.id.tvNext, android.view.View.GONE)
             }

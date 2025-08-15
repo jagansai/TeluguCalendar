@@ -11,6 +11,24 @@ function getTodayAndNextTwoDates(): string[] {
     format(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)),
   ];
 }
+// Format ISO date (YYYY-MM-DD) to Telugu: "D MonthName, YYYY (YYYY-MM-DD)"
+function formatTeluguDateFromIso(iso: string): string {
+  try {
+    const [y, m, d] = iso.split('-').map(s => parseInt(s, 10));
+    const months = [
+      'జనవరు', 'ఫిబ్రవరి', 'మార్చి', 'ఏప్రిల్', 'మే', 'జూన్',
+      'జూలై', 'ఆగస్టు', 'సెప్టెంబర్', 'అక్టోబర్', 'నవంబర్', 'డిసెంబర్'
+    ];
+    const weekdays = ['ఆది', 'సోమ', 'మంగళ', 'బుధ', 'గురు', 'శుక్ర', 'శని'];
+    const day = d;
+    const monthName = months[m - 1] || '';
+    const wk = new Date(iso).getDay(); // 0=Sun
+    const shortWeek = weekdays[wk] || '';
+    return `${day} ${monthName}, ${y} (${shortWeek})`;
+  } catch (e) {
+    return iso;
+  }
+}
 // ...existing code...
 
 
@@ -85,9 +103,10 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 18,
+  marginBottom: 18,
+  marginTop: 12,
     textAlign: 'center',
-    color: '#512da8',
+  color: '#222222',
     letterSpacing: 0.5
   },
   card: {
@@ -146,7 +165,7 @@ const styles = StyleSheet.create({
   },
   festivalItem: {
     fontSize: 16,
-    color: '#d84315',
+  color: '#ff0000',
     marginBottom: 2
   },
   noFestival: {
@@ -193,6 +212,11 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   upcomingValue: {
+    fontSize: 15,
+    color: '#1976d2',
+    marginBottom: 2
+  },
+  dateText: {
     fontSize: 15,
     color: '#1976d2',
     marginBottom: 2
@@ -335,9 +359,17 @@ const App = () => {
           <View style={styles.widgetChrome}>
             <View style={styles.card}>
               {/* Today block with Telugu labels */}
-              <Text style={styles.cardDate}>ఈ రోజు: {festivalDays[0].date}</Text>
-              <Text style={styles.cardThidi}>తిథి: {String(festivalDays[0].Thidi || '')}</Text>
+              {/* Show Telugu formatted date (e.g. 18 ఆగస్టు, 2025 (2025-08-18)) */}
+              <Text style={styles.cardDate}>
+                ఈ రోజు: {(() => {
+                  const raw = String(festivalDays[0].date || '');
+                  const match = raw.match(/\((\d{4}-\d{2}-\d{2})\)/);
+                  const iso = match ? match[1] : raw.match(/\d{4}-\d{2}-\d{2}/)?.[0] || raw;
+                  return formatTeluguDateFromIso(iso);
+                })()}
+              </Text>
               <Text style={styles.cardYear}>సం: {String(festivalDays[0].year || '')}</Text>
+              <Text style={styles.cardThidi}>తిథి: {String(festivalDays[0].Thidi || '')}</Text>
 
               {/* Only show header and list if there are any festivals today */}
               {festivalDays[0].festivals.length > 0 && (
@@ -357,7 +389,16 @@ const App = () => {
                 <View style={styles.upcomingList}>
                   {nextTwoDaysWithFestivals.map(day => (
                     <Text key={day.date} style={styles.upcomingValue}>
-                      {day.date}: {day.festivals[0]}
+                      {(() => {
+                        const raw = String(day.date || '')
+                        const match = raw.match(/\((\d{4}-\d{2}-\d{2})\)/)
+                        const iso = match ? match[1] : raw.match(/\d{4}-\d{2}-\d{2}/)?.[0] || raw
+                        const dateText = formatTeluguDateFromIso(iso)
+                        const fest = day.festivals[0]
+                        return (
+                          <>{dateText}: <Text style={{color: '#ff0000'}}>{fest}</Text></>
+                        )
+                      })()}
                     </Text>
                   ))}
                 </View>

@@ -47,6 +47,38 @@ npm run android:build
 npm run android:build:release
 ```
 
+## Planned enhancements
+
+Note: these are design notes for future work — documented here so we can pick them up later.
+
+1) Tokenized festival files (yeared / token-based merging)
+
+- Goal: allow the app to load/merge festival JSON files for multiple years or variants without manual midnight pushes.
+- Proposal: use a filename token so the loader can discover and merge matching files in `assets/`.
+	- Example token: `festivals_TE`.
+	- Files: `assets/festivals_TE2025.json`, `assets/festivals_TE2026.json`, etc.
+	- Loader behaviour (planned): when token `festivals_TE` is configured, the app will load all files matching that prefix + year pattern, merge their arrays in year order, and use the combined list at runtime.
+	- Fallback: if no token is configured, keep current behaviour and load `assets/festivals2025.json`.
+	- Notes: build scripts (the `copyFestivalJson` Gradle task / scripts) will need a small update to either copy the merged file into `android/app/src/main/assets/` or copy all matching files; merging/deduplication rules can be added later.
+
+2) Tokenize UI labels for localization
+
+- Goal: make all visible labels (for example: the Telugu labels `తిథి`, `సం`, `పండుగలు`, `ఈ రోజు`, `రాబోయే పండుగలు`) configurable via a small i18n layer so the app can be extended to other languages easily.
+- Proposal: replace hard-coded label strings with lookups (example keys):
+	- `label.today` (e.g. `"ఈ రోజు:"`)
+	- `label.thidi` (e.g. `"తిథి:"`)
+	- `label.year` (e.g. `"సం:"`)
+	- `label.festivals` (e.g. `"పండుగలు:"`)
+	- `label.upcoming` (e.g. `"రాబోయే పండుగలు (2 రోజుల్లో):"`)
+- Implementation note: add a small `locales/` folder (for example `locales/en-ZA.json`, `locales/te-IN.json`) and a tiny lookup helper; default to the current Telugu strings where keys are missing.
+
+These two changes make the festival data and UI strings extensible without large structural changes. We can implement them incrementally:
+- Step 1: implement the runtime loader that accepts a token and merges matching `assets/` files.
+- Step 2: add a small i18n helper and replace hard-coded labels with keys.
+- Step 3: update build scripts to copy the right assets for Android widget packaging.
+
+We can pick these up after the current release is live.
+
 Notes:
 - The Gradle build also runs the copy step automatically via the `preBuild` hook.
 - You can still use `npm run android` to install & run; for CI or manual builds prefer the script above.
