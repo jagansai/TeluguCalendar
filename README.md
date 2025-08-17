@@ -51,17 +51,7 @@ npm run android:build:release
 
 Note: these are design notes for future work — documented here so we can pick them up later.
 
-1) Tokenized festival files (yeared / token-based merging)
-
-- Goal: allow the app to load/merge festival JSON files for multiple years or variants without manual midnight pushes.
-- Proposal: use a filename token so the loader can discover and merge matching files in `assets/`.
-	- Example token: `festivals_TE`.
-	- Files: `assets/festivals_TE2025.json`, `assets/festivals_TE2026.json`, etc.
-	- Loader behaviour (planned): when token `festivals_TE` is configured, the app will load all files matching that prefix + year pattern, merge their arrays in year order, and use the combined list at runtime.
-	- Fallback: if no token is configured, keep current behaviour and load `assets/festivals2025.json`.
-	- Notes: build scripts (the `copyFestivalJson` Gradle task / scripts) will need a small update to either copy the merged file into `android/app/src/main/assets/` or copy all matching files; merging/deduplication rules can be added later.
-
-2) Tokenize UI labels for localization
+1) Tokenize UI labels for localization
 
 - Goal: make all visible labels (for example: the Telugu labels `తిథి`, `సం`, `పండుగలు`, `ఈ రోజు`, `రాబోయే పండుగలు`) configurable via a small i18n layer so the app can be extended to other languages easily.
 - Proposal: replace hard-coded label strings with lookups (example keys):
