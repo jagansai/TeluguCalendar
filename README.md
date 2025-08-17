@@ -1,4 +1,7 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Telugu Festival Reminder
+This app reminds users of upcoming Telugu festivals. Main features include:
+- Widget support for displaying week, thidhi, name of the year and festival ( if it is on current day )
+
 
 # Getting Started
 
@@ -6,46 +9,15 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 ## Step 1: Start Metro
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+Clone the project and on windows / Linux, install powershell.  
+Run for e.g., `scripts/deploy-android.ps1 Release -Format apk -FestivalsToken telugu/festivals`
 
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
 
 #### Android build with single-source JSON (widget sync)
 
-This project keeps a single source of truth for festival data at `assets/festivals2025.json`.
-On Android builds, the file is copied into `android/app/src/main/assets/` so the widget can read it.
-
-Use the script to build and ensure the file is synced:
+This script builds the Android app and copies the `assets/` folder to the right place for the widget to access it.
 
 ```sh
-# Debug build
-npm run android:build
-
-# Release build
-npm run android:build:release
-```
 
 ## Planned enhancements
 
