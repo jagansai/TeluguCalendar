@@ -1,7 +1,9 @@
 param(
   [switch]$Release,
   [ValidateSet('apk','aab')]
-  [string]$Format
+  [string]$Format,
+  [Parameter(Mandatory=$true)]
+  [string]$FestivalsToken
 )
 
 $ErrorActionPreference = 'Stop'
@@ -9,8 +11,36 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repo = Split-Path -Parent $root
 
-Write-Host "Copying festivals2025.json to Android assets..."
-Copy-Item -Force -Path "$repo/assets/festivals2025.json" -Destination "$repo/android/app/src/main/assets/festivals2025.json"
+if ($FestivalsToken) {
+  Write-Host "Merging festival files for token: $FestivalsToken"
+  $pattern = "$repo/assets/${FestivalsToken}*.json"
+  $files = Get-ChildItem -Path $repo\assets -Filter "${FestivalsToken}*.json" -File | Sort-Object Name
+  if ($files.Count -eq 0) { Write-Warning "No festival files found for token '$FestivalsToken'. Falling back to festivals2025.json." }
+  else {
+    $all = @()
+    foreach ($f in $files) {
+      Write-Host "  - loading $($f.Name)"
+      $txt = Get-Content $f.FullName -Raw
+      try {
+        $arr = ConvertFrom-Json $txt
+        if ($arr -is [System.Array]) { $all += $arr }
+        else { Write-Warning "$($f.Name) did not contain a JSON array" }
+      } catch {
+        Write-Warning "Failed to parse $($f.Name): $_"
+      }
+    }
+    # Write merged to repo assets as festivals.json so app can require it
+    $outPath = Join-Path $repo 'assets/festivals.json'
+    $json = $all | ConvertTo-Json -Depth 10
+    Set-Content -Path $outPath -Value $json -Encoding UTF8
+    Write-Host "Wrote merged festivals to $outPath"
+    # Also copy to android assets
+    Copy-Item -Force -Path $outPath -Destination "$repo/android/app/src/main/assets/festivals.json"
+  }
+} else {
+  Write-Host "Copying festivals2025.json to Android assets..."
+  Copy-Item -Force -Path "$repo/assets/festivals2025.json" -Destination "$repo/android/app/src/main/assets/festivals2025.json"
+}
 
 # Copy app icon into Android resources for adaptive icon
 $iconSrc = Join-Path $repo 'assets/app_icon.png'

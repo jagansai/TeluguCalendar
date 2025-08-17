@@ -17,7 +17,12 @@ object WidgetUtils {
         val nextLines: List<String>
     )
     fun readFestivalData(context: Context): List<FestivalDay> {
-        val json = context.assets.open("festivals2025.json").bufferedReader().use { it.readText() }
+        // Prefer merged 'festivals.json' if present (produced by build script), otherwise fall back to year-specific file
+        val json = try {
+            context.assets.open("festivals.json").bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            context.assets.open("festivals2025.json").bufferedReader().use { it.readText() }
+        }
         val type = object : TypeToken<List<FestivalDay>>() {}.type
         return Gson().fromJson(json, type)
     }
