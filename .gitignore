@@ -78,3 +78,4 @@ yarn-error.log
 assets/te_festivals*.json
 !assets/te_festivals2025.json
 assets/festivals.json
+android/app/src/main/assets/festivals*.json
