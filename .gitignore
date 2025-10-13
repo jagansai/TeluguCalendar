@@ -73,3 +73,8 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Festival JSON files: keep te_festivals2025.json under source control, ignore other generated festival variants
+assets/te_festivals*.json
+!assets/te_festivals2025.json
+assets/festivals.json

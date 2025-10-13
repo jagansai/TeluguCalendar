@@ -271,13 +271,8 @@ const App = () => {
         }
       }
       try {
-        // Use require to load the bundled JSON asset. Prefer merged 'festivals.json' when present.
-        let allDays: FestivalDay[]
-        try {
-          allDays = require('./assets/festivals.json')
-        } catch (e) {
-          allDays = require('./assets/festivals2025.json')
-        }
+        // Use require to load the bundled JSON asset. Expect 'festivals.json' to be present.
+        let allDays: FestivalDay[] = require('./assets/festivals.json')
         const wantedDates = getTodayAndNextTwoDates();
         // Extract the (YYYY-MM-DD) part from the date string in JSON
         // Only show the current day
@@ -311,8 +306,7 @@ const App = () => {
   }, []);
 
   // Compute next-2-days entries that actually have festivals
-  let allDays: FestivalDay[]
-  try { allDays = require('./assets/festivals.json') } catch { allDays = require('./assets/festivals2025.json') }
+  const allDays: FestivalDay[] = require('./assets/festivals.json')
   const wantedDates = getTodayAndNextTwoDates();
   const nextTwoDaysWithFestivals = allDays.filter(day => {
     const match = day.date.match(/\((\d{4}-\d{2}-\d{2})\)/);
