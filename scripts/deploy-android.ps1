@@ -8,7 +8,9 @@ param(
   [ValidateSet('apk','aab')]
   [string]$Format,
   [switch]$StartMetro,
-  [int]$MetroPort = 8081
+  [int]$MetroPort = 8081,
+  [int]$BootTimeout = 300,
+  [switch]$SkipBootWait
 )
 
 $ErrorActionPreference = 'Stop'
@@ -81,20 +83,37 @@ function Ensure-DeviceOnline {
   }
 
   # Wait for device to appear and fully boot
-  $timeoutSec = 300
+  $timeoutSec = $BootTimeout
   $sw = [System.Diagnostics.Stopwatch]::StartNew()
   while ($sw.Elapsed.TotalSeconds -lt $timeoutSec) {
     Start-Sleep -Seconds 5
     $devs = Get-ConnectedDevices -Adb $Adb
     if ($devs.Count -gt 0) {
-      # Check boot completed
+      # Check boot status using multiple properties
       $serial = $devs[0]
-      $boot = & $Adb -s $serial shell getprop sys.boot_completed 2>$null
-      if ($boot -and $boot.Trim() -eq '1') { return $true }
+      Write-Step "Found device: $serial"
+      if ($PSBoundParameters.ContainsKey('SkipBootWait') -and $SkipBootWait.IsPresent) {
+        Write-Step 'Skipping boot wait as requested.'
+        return $true
+      }
+      $props = @('sys.boot_completed','dev.bootcomplete','init.svc.bootanim')
+      $values = @{}
+      foreach ($p in $props) {
+        try {
+          $raw = & $Adb -s $serial shell getprop $p 2>$null
+        } catch { $raw = $null }
+        $txt = ($raw -join "`n") -replace '\r|\n',''
+        $values[$p] = $txt
+      }
+  Write-Step ("Boot props: " + (( $values.GetEnumerator() | ForEach-Object { "{0}={1}" -f $_.Key,$_.Value } ) -join '; '))
+      if ($values['sys.boot_completed'] -eq '1' -or $values['dev.bootcomplete'] -eq '1' -or $values['init.svc.bootanim'] -eq 'stopped') {
+        Write-Step 'Emulator reports boot complete.'
+        return $true
+      }
     }
     Write-Step 'Waiting for emulator to boot...'
   }
-  throw 'Timed out waiting for emulator to boot.'
+  throw "Timed out waiting for emulator to boot after $timeoutSec seconds."
 }
 
 function Build-App {
@@ -164,7 +183,16 @@ function Ensure-MetroRunning {
   $repo = Get-RepoRoot
   Write-Step "Starting Metro on port $Port ..."
   if ($WhatIf) { Write-Step "DRY RUN: npm run start"; return }
-  Start-Process -FilePath "npm" -ArgumentList @('run','start') -WorkingDirectory $repo -WindowStyle Minimized | Out-Null
+  # Try to start Metro in a way that avoids PowerShell script shim / execution policy issues.
+  # Prefer pwsh (PowerShell 7) if installed, otherwise fall back to cmd.exe which runs npm.cmd directly.
+  $pwshCmd = (Get-Command pwsh -ErrorAction SilentlyContinue).Source
+  if ($pwshCmd) {
+    Write-Step "Starting Metro using pwsh..."
+    Start-Process -FilePath $pwshCmd -ArgumentList @('-NoProfile','-Command','npm run start') -WorkingDirectory $repo -WindowStyle Minimized | Out-Null
+  } else {
+    Write-Step "Starting Metro using cmd.exe..."
+    Start-Process -FilePath 'cmd.exe' -ArgumentList "/c npm run start" -WorkingDirectory $repo -WindowStyle Minimized | Out-Null
+  }
 }
 
 function Main {
