@@ -37,61 +37,11 @@ function formatTeluguDateFromIso(iso: string): string {
 
 
 import { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, PermissionsAndroid, Pressable } from "react-native";
+import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, Pressable, ScrollView } from "react-native";
 import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import notifee, { TimestampTrigger, TriggerType, AndroidImportance, AndroidColor } from '@notifee/react-native';
 
-// Helper to create channel and schedule notification for 6 AM
-async function setupNotifee(todayFestivals: string[]) {
-  // Create channel (Android)
-  await notifee.createChannel({
-    id: 'festival-reminder',
-    name: 'Festival Reminder',
-    importance: AndroidImportance.HIGH,
-    lights: true,
-    vibration: true,
-    badge: true,
-    sound: 'default',
-    description: 'Daily festival notifications',
-    lightColor: AndroidColor.PURPLE,
-  });
 
-  // Request permission (Android 13+)
-  await notifee.requestPermission();
-
-  // Cancel all previous triggers
-  await notifee.cancelAllNotifications();
-
-  // Schedule notification for 6AM
-  const now = new Date();
-  let sixAM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0, 0);
-  if (now > sixAM) {
-    sixAM.setDate(sixAM.getDate() + 1);
-  }
-  const message = todayFestivals.length > 0
-    ? `Today's festivals: ${todayFestivals.join(', ')}`
-    : 'No festivals today.';
-  const trigger: TimestampTrigger = {
-    type: TriggerType.TIMESTAMP,
-    timestamp: sixAM.getTime(),
-    repeatFrequency: 1, // DAILY
-    alarmManager: true,
-  };
-  await notifee.createTriggerNotification(
-    {
-      title: 'Telugu Festival Reminder',
-      body: message,
-      android: {
-        channelId: 'festival-reminder',
-        smallIcon: 'ic_launcher',
-        color: '#512da8',
-        pressAction: { id: 'default' },
-      },
-    },
-    trigger
-  );
-}
 
 const styles = StyleSheet.create({
   container: {
@@ -236,11 +186,111 @@ const styles = StyleSheet.create({
   hintButtonText: { color: 'white', fontWeight: '600' },
   hintDismiss: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#2e7d32' },
   hintDismissText: { color: '#2e7d32', fontWeight: '600' }
+  ,
+  calendarWrapper: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 12,
+  },
+  calendarColumn: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.02)'
+  },
+  monthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 6
+  },
+  navButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(0,0,0,0.03)'
+  },
+  monthTitle: {
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  navButtonDisabled: {
+    opacity: 0.35
+  },
+  weekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6
+  },
+  weekdayLabel: {
+    width: 56,
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#666'
+  },
+  dayCell: {
+    width: 56,
+    height: 80,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent'
+  },
+  dayCellInactive: {
+    opacity: 0.15
+  },
+  dayCellFestival: {
+    backgroundColor: '#ffd54f'
+  },
+  dayCellDate: {
+    fontSize: 18,
+    fontWeight: '800'
+  },
+  dayCellThidi: {
+    fontSize: 12,
+    color: '#444',
+    marginTop: 6,
+    textAlign: 'center'
+  },
+  rightList: {
+    width: 180,
+    marginLeft: 12
+  },
+  rightItem: {
+    marginBottom: 10,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.02)'
+  },
+  rightItemDate: { fontSize: 12, color: '#555', marginBottom: 4 },
+  rightItemName: { fontSize: 14, color: '#d32f2f', fontWeight: '600' }
+  ,
+  dayCellFestivalText: {
+    color: '#2f2f2f',
+    fontWeight: '700'
+  },
+  dayCellFestivalBg: {
+    backgroundColor: '#ffd54f'
+  },
+  lowerFestivals: {
+    marginTop: 12,
+    flex: 1,
+    backgroundColor: 'rgba(255, 250, 230, 0.9)',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 224, 130, 0.6)'
+  },
+  monthFestivalsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+    color: '#6a1b9a'
+  }
 });
 
 type FestivalDay = {
   date: string;
   Thidi: string;
+  shortThidi?: string;
   year: string;
   festivals: string[];
 };
@@ -251,28 +301,124 @@ const App = () => {
   const [error, setError] = useState<string | null>(null);
   const [showWidgetHint, setShowWidgetHint] = useState(false);
   const [canPin, setCanPin] = useState(false);
+  // calendar state
+  const [monthStart, setMonthStart] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+
+  // Load all festival days once (bundled asset)
+  const allDays: FestivalDay[] = require('./assets/festivals.json');
+
+  // Helpers for calendar generation
+  const isoFromDate = (d: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+
+  const makeMonthMatrix = (startOfMonth: Date) => {
+    // returns array of weeks; each week is array of 7 Date | null
+    const year = startOfMonth.getFullYear();
+    const month = startOfMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const firstWeekday = firstDay.getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const cells: (Date | null)[] = [];
+    // Fill leading nulls
+    for (let i = 0; i < firstWeekday; i++) cells.push(null);
+    // Fill days
+    for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+    // Fill trailing nulls to complete weeks
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    const weeks: (Date | null)[][] = [];
+    for (let i = 0; i < cells.length; i += 7) {
+      weeks.push(cells.slice(i, i + 7));
+    }
+    return weeks;
+  };
+
+  // Build a quick lookup map from ISO date -> FestivalDay
+  const festivalMap: Record<string, FestivalDay> = {};
+  try {
+    for (const d of allDays) {
+      const m = String(d.date || '').match(/\((\d{4}-\d{2}-\d{2})\)/);
+      if (!m) continue;
+      festivalMap[m[1]] = d;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  const weeks = makeMonthMatrix(monthStart);
+
+  // Compute min/max month available from data so we can clamp navigation
+  const monthRange = (() => {
+    let minIso: string | null = null;
+    let maxIso: string | null = null;
+    for (const fd of allDays) {
+      const m = String(fd.date || '').match(/\((\d{4}-\d{2}-\d{2})\)/);
+      if (!m) continue;
+      const iso = m[1];
+      if (!minIso || iso < minIso) minIso = iso;
+      if (!maxIso || iso > maxIso) maxIso = iso;
+    }
+    if (!minIso || !maxIso) return null;
+    const [minY, minM] = minIso.split('-').map(s => parseInt(s, 10));
+    const [maxY, maxM] = maxIso.split('-').map(s => parseInt(s, 10));
+    return { min: new Date(minY, minM - 1, 1), max: new Date(maxY, maxM - 1, 1) };
+  })();
+
+  // Ensure monthStart is within available range
+  useEffect(() => {
+    if (!monthRange) return;
+    const msY = monthStart.getFullYear();
+    const msM = monthStart.getMonth();
+    const minY = monthRange.min.getFullYear();
+    const minM = monthRange.min.getMonth();
+    const maxY = monthRange.max.getFullYear();
+    const maxM = monthRange.max.getMonth();
+    const beforeMin = msY < minY || (msY === minY && msM < minM);
+    const afterMax = msY > maxY || (msY === maxY && msM > maxM);
+    if (beforeMin) setMonthStart(new Date(minY, minM, 1));
+    else if (afterMax) setMonthStart(new Date(maxY, maxM, 1));
+  }, [monthRange]);
+
+  const monthFestivals = Object.values(festivalMap).filter(fd => {
+    const m = String(fd.date || '').match(/\((\d{4}-\d{2}-\d{2})\)/);
+    if (!m) return false;
+    const iso = m[1];
+    const [y, mo] = iso.split('-').map(s => parseInt(s, 10));
+    // Only include days that actually have festival entries
+    const hasFest = Array.isArray(fd.festivals) && fd.festivals.length > 0;
+    return hasFest && y === monthStart.getFullYear() && mo === monthStart.getMonth() + 1;
+  }).sort((a, b) => {
+    const ma = a.date.match(/\((\d{4}-\d{2}-\d{2})\)/)![1];
+    const mb = b.date.match(/\((\d{4}-\d{2}-\d{2})\)/)![1];
+    return ma.localeCompare(mb);
+  });
+
+  const goPrevMonth = () => {
+    if (!monthRange) return setMonthStart(s => new Date(s.getFullYear(), s.getMonth() - 1, 1));
+    const min = monthRange.min;
+    const candidate = new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1);
+    if (candidate.getFullYear() < min.getFullYear() || (candidate.getFullYear() === min.getFullYear() && candidate.getMonth() < min.getMonth())) return;
+    setMonthStart(candidate);
+  };
+
+  const goNextMonth = () => {
+    if (!monthRange) return setMonthStart(s => new Date(s.getFullYear(), s.getMonth() + 1, 1));
+    const max = monthRange.max;
+    const candidate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
+    if (candidate.getFullYear() > max.getFullYear() || (candidate.getFullYear() === max.getFullYear() && candidate.getMonth() > max.getMonth())) return;
+    setMonthStart(candidate);
+  };
 
   useEffect(() => {
   async function setup() {
-      // Request notification permission for Android 13+
-      if (Platform.OS === 'android' && Platform.Version >= 33) {
-        try {
-          const granted = await PermissionsAndroid.request(
-            'android.permission.POST_NOTIFICATIONS',
-            {
-              title: 'Festival Notifications',
-              message: 'Allow Telugu Festival Reminder to send you daily festival notifications?',
-              buttonPositive: 'Allow',
-              buttonNegative: 'Deny',
-            }
-          );
-        } catch (err) {
-          // ignore
-        }
-      }
       try {
-        // Use require to load the bundled JSON asset. Expect 'festivals.json' to be present.
-        let allDays: FestivalDay[] = require('./assets/festivals.json')
+        // Use the already-loaded bundled JSON asset. Expect 'festivals.json' to be present.
         const wantedDates = getTodayAndNextTwoDates();
         // Extract the (YYYY-MM-DD) part from the date string in JSON
         // Only show the current day
@@ -282,12 +428,7 @@ const App = () => {
           return wantedDates[0] === match[1];
         });
         setFestivalDays(today);
-        // Schedule notification for 6AM using Notifee
-        if (today.length > 0) {
-          await setupNotifee(today[0].festivals);
-        } else {
-          await setupNotifee([]);
-        }
+        // no notification scheduling
       } catch (e) {
         setError('Failed to load festival data.');
       }
@@ -306,7 +447,6 @@ const App = () => {
   }, []);
 
   // Compute next-2-days entries that actually have festivals
-  const allDays: FestivalDay[] = require('./assets/festivals.json')
   const wantedDates = getTodayAndNextTwoDates();
   const nextTwoDaysWithFestivals = allDays.filter(day => {
     const match = day.date.match(/\((\d{4}-\d{2}-\d{2})\)/);
@@ -352,61 +492,71 @@ const App = () => {
           </View>
         </View>
       )}
-      {error ? (
-        <Text style={styles.error}>{error}</Text>
-      ) : (
-        festivalDays.length > 0 && (
-          <View style={styles.widgetChrome}>
-            <View style={styles.card}>
-              {/* Today block with Telugu labels */}
-              {/* Show Telugu formatted date (e.g. 18 ఆగస్టు, 2025 (2025-08-18)) */}
-              <Text style={styles.cardDate}>
-                ఈ రోజు: {(() => {
-                  const raw = String(festivalDays[0].date || '');
-                  const match = raw.match(/\((\d{4}-\d{2}-\d{2})\)/);
-                  const iso = match ? match[1] : raw.match(/\d{4}-\d{2}-\d{2}/)?.[0] || raw;
-                  return formatTeluguDateFromIso(iso);
-                })()}
-              </Text>
-              <Text style={styles.cardYear}>సం: {String(festivalDays[0].year || '')}</Text>
-              <Text style={styles.cardThidi}>తిథి: {String(festivalDays[0].Thidi || '')}</Text>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
-              {/* Only show header and list if there are any festivals today */}
-              {festivalDays[0].festivals.length > 0 && (
-                <View style={styles.festivalList}>
-                  <Text style={styles.upcomingLabel}>పండుగలు:</Text>
-                  {festivalDays[0].festivals.map(fest => (
-                    <Text key={fest} style={styles.festivalItem}>🎉 {fest}</Text>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            {/* Next 2 days: show only entries that have at least one festival */}
-            {nextTwoDaysWithFestivals.length > 0 && (
-              <View style={styles.upcomingBox}>
-                <Text style={styles.upcomingLabel}>రాబోయే పండుగలు (2 రోజుల్లో):</Text>
-                <View style={styles.upcomingList}>
-                  {nextTwoDaysWithFestivals.map(day => (
-                    <Text key={day.date} style={styles.upcomingValue}>
-                      {(() => {
-                        const raw = String(day.date || '')
-                        const match = raw.match(/\((\d{4}-\d{2}-\d{2})\)/)
-                        const iso = match ? match[1] : raw.match(/\d{4}-\d{2}-\d{2}/)?.[0] || raw
-                        const dateText = formatTeluguDateFromIso(iso)
-                        const fest = day.festivals[0]
-                        return (
-                          <>{dateText}: <Text style={{color: '#ff0000'}}>{fest}</Text></>
-                        )
-                      })()}
-                    </Text>
-                  ))}
-                </View>
-              </View>
-            )}
+      {/* Calendar month view */}
+      <View style={{height: 12}} />
+      <View style={styles.calendarWrapper}>
+        <View style={styles.calendarColumn}>
+          <View style={styles.monthHeader}>
+            {(() => {
+              const isAtMin = monthRange ? (monthStart.getFullYear() === monthRange.min.getFullYear() && monthStart.getMonth() === monthRange.min.getMonth()) : false;
+              const isAtMax = monthRange ? (monthStart.getFullYear() === monthRange.max.getFullYear() && monthStart.getMonth() === monthRange.max.getMonth()) : false;
+              return (
+                <>
+                  <Pressable onPress={goPrevMonth} disabled={isAtMin} style={[styles.navButton, isAtMin && styles.navButtonDisabled]}><Text>{'‹'}</Text></Pressable>
+                  <Text style={styles.monthTitle}>{(() => { const months = ['జనవరి','ఫిబ్రవరి','మార్చి','ఏప్రిల్','మే','జూన్','జూలై','ఆగస్టు','సెప్టెంబర్','అక్టోబర్','నవంబర్','డిసెంబర్']; return `${months[monthStart.getMonth()]} ${monthStart.getFullYear()}`; })()}</Text>
+                  <Pressable onPress={goNextMonth} disabled={isAtMax} style={[styles.navButton, isAtMax && styles.navButtonDisabled]}><Text>{'›'}</Text></Pressable>
+                </>
+              )
+            })()}
           </View>
-        )
-      )}
+          <View style={styles.weekRow}>
+            {['ఆది','సోమ','మంగళ','బుధ','గురు','శుక్ర','శని'].map((w) => (
+              <Text key={w} style={styles.weekdayLabel}>{w}</Text>
+            ))}
+          </View>
+          {weeks.map((week, wi) => (
+            <View key={wi} style={styles.weekRow}>
+                {week.map((d, di) => {
+                if (!d) return <View key={di} style={[styles.dayCell, styles.dayCellInactive]} />;
+                const iso = isoFromDate(d);
+                const fest = festivalMap[iso];
+                const hasFest = !!(fest && Array.isArray(fest.festivals) && fest.festivals.length > 0);
+                // Use only the precomputed shortThidi when present; otherwise show nothing.
+                const thidiShort = fest && fest.shortThidi ? String(fest.shortThidi) : '';
+                return (
+                  <View key={di} style={[styles.dayCell, hasFest ? styles.dayCellFestivalBg : null]}>
+                    <Text style={[styles.dayCellDate, hasFest ? styles.dayCellFestivalText : {}]}>{d.getDate()}</Text>
+                    <Text style={[styles.dayCellThidi, hasFest ? styles.dayCellFestivalText : {}]}>{thidiShort}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Lower pane for this month's festivals */}
+      <View style={styles.lowerFestivals}>
+        <Text style={styles.monthFestivalsTitle}>పండుగలు</Text>
+        <ScrollView>
+          {monthFestivals.length === 0 && (
+            <Text style={styles.noFestival}>No festivals this month.</Text>
+          )}
+          {monthFestivals.map(fd => {
+            const m = String(fd.date || '').match(/\((\d{4}-\d{2}-\d{2})\)/);
+            const iso = m ? m[1] : '';
+            const displayDate = String(fd.date || '').replace(/\s*\(.+$/, '');
+            return (
+              <View key={iso} style={styles.rightItem}>
+                <Text style={styles.rightItemDate}>{displayDate}:</Text>
+                <Text style={styles.rightItemName}>{fd.festivals.join(', ')}</Text>
+              </View>
+            )
+          })}
+        </ScrollView>
+      </View>
     </View>
   );
 }
