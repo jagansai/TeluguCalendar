@@ -1,5 +1,3 @@
-
-
 function getTodayAndNextTwoDates(): string[] {
   const today = new Date();
   const pad = (n: number) => n.toString().padStart(2, '0');
@@ -11,7 +9,12 @@ function getTodayAndNextTwoDates(): string[] {
     format(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)),
   ];
 }
-// Format ISO date (YYYY-MM-DD) to Telugu: "D MonthName, YYYY (YYYY-MM-DD)"
+
+import React, { useEffect, useState } from "react";
+import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, Pressable, ScrollView, Modal } from "react-native";
+import { NativeModules } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 function formatTeluguDateFromIso(iso: string): string {
   try {
     const [y, m, d] = iso.split('-').map(s => parseInt(s, 10));
@@ -29,20 +32,6 @@ function formatTeluguDateFromIso(iso: string): string {
     return iso;
   }
 }
-// ...existing code...
-
-
-
-
-
-
-import { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, Pressable, ScrollView } from "react-native";
-import { NativeModules } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -64,10 +53,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 14,
   // Soft translucent card background
-  backgroundColor: 'rgba(255, 248, 225, 0.9)',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    backgroundColor: 'rgba(255, 248, 225, 0.9)',
     shadowOpacity: 0.13,
     shadowRadius: 6,
     alignItems: 'center',
@@ -111,13 +97,16 @@ const styles = StyleSheet.create({
   festivalList: {
     marginTop: 6,
     width: '100%',
-    alignItems: 'center'
+    alignItems: 'flex-start'
   },
   festivalItem: {
-    fontSize: 16,
-  color: '#ff0000',
-    marginBottom: 2
+    fontSize: 18,
+    color: '#b71c1c',
+    marginBottom: 6,
+    alignSelf: 'stretch',
+    textAlign: 'left'
   },
+
   noFestival: {
     fontSize: 15,
     color: '#888',
@@ -194,7 +183,16 @@ const styles = StyleSheet.create({
   },
   calendarColumn: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.02)'
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: 8,
+    borderRadius: 12,
+    borderWidth: 0.6,
+    borderColor: 'rgba(0,0,0,0.03)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2
   },
   monthHeader: {
     flexDirection: 'row',
@@ -221,35 +219,97 @@ const styles = StyleSheet.create({
     marginBottom: 6
   },
   weekdayLabel: {
-    width: 56,
+    flex: 1,
     textAlign: 'center',
     fontSize: 12,
-    color: '#666'
+    color: '#666',
+    fontWeight: '600'
   },
   dayCell: {
-    width: 56,
-    height: 80,
-    borderRadius: 6,
+    flex: 1,
+    aspectRatio: 1,
+    paddingVertical: 8,
+    margin: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
+    maxWidth: 92,
+    minWidth: 36,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1
   },
   dayCellInactive: {
     opacity: 0.15
   },
   dayCellFestival: {
-    backgroundColor: '#ffd54f'
+    backgroundColor: '#fff9c4'
   },
   dayCellDate: {
     fontSize: 18,
     fontWeight: '800'
   },
+  dayCellDateFestival: {
+    color: '#5d4037'
+  },
   dayCellThidi: {
     fontSize: 12,
     color: '#444',
     marginTop: 6,
-    textAlign: 'center'
+    textAlign: 'center',
+    lineHeight: 16,
+    flexWrap: 'wrap',
+    width: '100%'
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)'
+  },
+  modalContent: {
+    width: '92%',
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    borderRadius: 14,
+    backgroundColor: '#fff',
+    alignItems: 'stretch',
+    maxHeight: '84%'
+  },
+  modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  modalTop: {
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 6
+  },
+  modalTopDate: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1976d2',
+    marginBottom: 6
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 6
+  },
+  modalRowLabel: { fontSize: 14, color: '#444' },
+  modalRowValue: { fontSize: 14, fontWeight: '700' },
+  modalDivider: { height: 1, backgroundColor: 'rgba(0,0,0,0.06)', marginVertical: 10 },
+  modalBottom: { paddingHorizontal: 6, paddingBottom: 6 },
+  modalClose: { marginTop: 12, alignSelf: 'flex-end', padding: 8 },
+  modalCloseText: { color: '#1976d2', fontWeight: '700' },
+  modalDate: { color: '#1976d2', fontSize: 18, fontWeight: '700', marginBottom: 10 },
+  modalLabel: { fontSize: 15, color: '#333', marginBottom: 6 },
+  modalValue: { fontSize: 15, color: '#000', fontWeight: '700', lineHeight: 24 },
+  festHeader: { fontSize: 16, fontWeight: '700', marginBottom: 6 },
+  modalFestivals: { color: '#f14343ff', fontSize: 18, fontWeight: '700', marginTop: 8 },
   rightList: {
     width: 180,
     marginLeft: 12
@@ -269,6 +329,11 @@ const styles = StyleSheet.create({
   },
   dayCellFestivalBg: {
     backgroundColor: '#ffd54f'
+  },
+  dayCellSelected: {
+    borderWidth: 2,
+    borderColor: '#1976d2',
+    backgroundColor: 'rgba(25,118,210,0.06)'
   },
   lowerFestivals: {
     marginTop: 12,
@@ -290,7 +355,6 @@ const styles = StyleSheet.create({
 type FestivalDay = {
   date: string;
   Thidi: string;
-  shortThidi?: string;
   year: string;
   festivals: string[];
 };
@@ -301,6 +365,8 @@ const App = () => {
   const [error, setError] = useState<string | null>(null);
   const [showWidgetHint, setShowWidgetHint] = useState(false);
   const [canPin, setCanPin] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<FestivalDay | null>(null);
+  const [selectedIso, setSelectedIso] = useState<string | null>(null);
   // calendar state
   const [monthStart, setMonthStart] = useState(() => {
     const d = new Date();
@@ -492,10 +558,8 @@ const App = () => {
           </View>
         </View>
       )}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      {/* Calendar month view */}
-      <View style={{height: 12}} />
+      {/* Full month calendar view (numbers only in cells) */}
+      <View style={{ height: 12 }} />
       <View style={styles.calendarWrapper}>
         <View style={styles.calendarColumn}>
           <View style={styles.monthHeader}>
@@ -505,42 +569,89 @@ const App = () => {
               return (
                 <>
                   <Pressable onPress={goPrevMonth} disabled={isAtMin} style={[styles.navButton, isAtMin && styles.navButtonDisabled]}><Text>{'‹'}</Text></Pressable>
-                  <Text style={styles.monthTitle}>{(() => { const months = ['జనవరి','ఫిబ్రవరి','మార్చి','ఏప్రిల్','మే','జూన్','జూలై','ఆగస్టు','సెప్టెంబర్','అక్టోబర్','నవంబర్','డిసెంబర్']; return `${months[monthStart.getMonth()]} ${monthStart.getFullYear()}`; })()}</Text>
+                  <Text style={styles.monthTitle}>{(() => { const months = ['జనవరి', 'ఫిబ్రవరి', 'మార్చి', 'ఏప్రిల్', 'మే', 'జూన్', 'జూలై', 'ఆగస్టు', 'సెప్టెంబర్', 'అక్టోబర్', 'నవంబర్', 'డిసెంబర్']; return `${months[monthStart.getMonth()]} ${monthStart.getFullYear()}`; })()}</Text>
                   <Pressable onPress={goNextMonth} disabled={isAtMax} style={[styles.navButton, isAtMax && styles.navButtonDisabled]}><Text>{'›'}</Text></Pressable>
                 </>
               )
             })()}
           </View>
           <View style={styles.weekRow}>
-            {['ఆది','సోమ','మంగళ','బుధ','గురు','శుక్ర','శని'].map((w) => (
+            {['ఆది', 'సోమ', 'మంగళ', 'బుధ', 'గురు', 'శుక్ర', 'శని'].map((w) => (
               <Text key={w} style={styles.weekdayLabel}>{w}</Text>
             ))}
           </View>
           {weeks.map((week, wi) => (
             <View key={wi} style={styles.weekRow}>
                 {week.map((d, di) => {
-                if (!d) return <View key={di} style={[styles.dayCell, styles.dayCellInactive]} />;
-                const iso = isoFromDate(d);
-                const fest = festivalMap[iso];
-                const hasFest = !!(fest && Array.isArray(fest.festivals) && fest.festivals.length > 0);
-                // Use only the precomputed shortThidi when present; otherwise show nothing.
-                const thidiShort = fest && fest.shortThidi ? String(fest.shortThidi) : '';
-                return (
-                  <View key={di} style={[styles.dayCell, hasFest ? styles.dayCellFestivalBg : null]}>
-                    <Text style={[styles.dayCellDate, hasFest ? styles.dayCellFestivalText : {}]}>{d.getDate()}</Text>
-                    <Text style={[styles.dayCellThidi, hasFest ? styles.dayCellFestivalText : {}]}>{thidiShort}</Text>
-                  </View>
-                )
-              })}
+                  if (!d) return <View key={di} style={[styles.dayCell, styles.dayCellInactive]} />;
+                  const iso = isoFromDate(d);
+                  const fest = festivalMap[iso];
+                  const hasFest = !!(fest && Array.isArray(fest.festivals) && fest.festivals.length > 0);
+                  return (
+                    <Pressable
+                      key={di}
+                      onPress={() => {
+                        // mark selected date and open modal with festival info (if any)
+                        setSelectedIso(iso);
+                        if (fest) setSelectedDay(fest);
+                        else setSelectedDay({ date: `${d.getDate()} ${d.toLocaleString(undefined, { month: 'long' })} (${iso})`, Thidi: '', year: String(d.getFullYear()), festivals: [] });
+                      }}
+                      style={[
+                        styles.dayCell,
+                        hasFest ? styles.dayCellFestivalBg : null,
+                        selectedIso === iso ? styles.dayCellSelected : null,
+                      ]}
+                    >
+                      <Text style={[styles.dayCellDate, hasFest ? styles.dayCellDateFestival : {}]}>{d.getDate()}</Text>
+                    </Pressable>
+                  )
+                })}
             </View>
           ))}
         </View>
       </View>
+      {selectedDay && (
+        <Modal visible={true} transparent animationType="fade" onRequestClose={() => setSelectedDay(null)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              {/* Show info similar to the widget: formatted date, year, thidi, festivals */}
+              {(() => {
+                // determine ISO date for the selected day
+                const isoFromSelected = ((): string | null => {
+                  if (!selectedDay) return null;
+                  const m = String(selectedDay.date || '').match(/\((\d{4}-\d{2}-\d{2})\)/);
+                  if (m) return m[1];
+                  // fallback: try to find any YYYY-MM-DD in the string
+                  const m2 = String(selectedDay.date || '').match(/(\d{4}-\d{2}-\d{2})/);
+                  if (m2) return m2[1];
+                  return selectedIso;
+                })();
+                const isoToShow = isoFromSelected || isoFromDate(new Date());
+                const thidi = selectedDay.Thidi || '';
+                const year = selectedDay.year || '';
+                const fests = Array.isArray(selectedDay.festivals) ? selectedDay.festivals.filter(f => f && f.length) : [];
+                return (
+                  <>
+                    <Text style={styles.modalDate}>{formatTeluguDateFromIso(isoToShow)}</Text>
+                    <Text style={styles.modalLabel}>సం: <Text style={styles.modalValue}>{year}</Text></Text>
+                    <Text style={styles.modalLabel}>తిథి: <Text style={styles.modalValue}>{thidi}</Text></Text>
+                    {fests.length > 0 && (
+                      <Text style={styles.modalFestivals}>{fests.join(', ')}</Text>
+                    )}
+                  </>
+                );
+              })()}
+              <Pressable onPress={() => { setSelectedDay(null); setSelectedIso(null); }} style={styles.modalClose}><Text style={styles.modalCloseText}>Close</Text></Pressable>
+            </View>
+          </View>
+        </Modal>
+      )}
 
-      {/* Lower pane for this month's festivals */}
+      {/* Monthly festival list commented out per request. */}
+      {/*
       <View style={styles.lowerFestivals}>
         <Text style={styles.monthFestivalsTitle}>పండుగలు</Text>
-        <ScrollView>
+        <ScrollView nestedScrollEnabled={true} style={{maxHeight: 260}} contentContainerStyle={{paddingBottom: 12}}>
           {monthFestivals.length === 0 && (
             <Text style={styles.noFestival}>No festivals this month.</Text>
           )}
@@ -557,6 +668,7 @@ const App = () => {
           })}
         </ScrollView>
       </View>
+      */}
     </View>
   );
 }

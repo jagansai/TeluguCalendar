@@ -7,74 +7,77 @@
     android:padding="10dp"
     android:background="@drawable/widget_bg">
 
-    <!-- Date (keep size same as before) -->
+    <!-- Widget layout: date, year, thidi, festivals, next lines -->
     <TextView
         android:id="@+id/tvDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="#FFFFFFFF"
-        android:textSize="15sp"
+        android:textSize="14sp"
         android:lineSpacingExtra="2dp"
-        android:fontFamily="sans-serif"
-        android:gravity="center"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="start"
         android:paddingTop="2dp"
-        android:paddingBottom="2dp" />
+        android:paddingBottom="2dp"
+        android:maxLines="2"
+        android:ellipsize="end" />
 
-    <!-- Year (keep size same as before) -->
-    <TextView
-        android:id="@+id/tvYear"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFFFF"
-        android:textSize="15sp"
-        android:lineSpacingExtra="2dp"
-        android:fontFamily="sans-serif"
-        android:gravity="center"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:paddingTop="2dp"
-        android:paddingBottom="2dp" />
+        android:paddingBottom="2dp">
 
-    <!-- Thidi (increase font) -->
-    <TextView
-        android:id="@+id/tvThidi"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#FFFFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:lineSpacingExtra="2dp"
-        android:fontFamily="sans-serif"
-        android:gravity="center"
-        android:paddingTop="2dp"
-        android:paddingBottom="2dp" />
+        <TextView
+            android:id="@+id/tvYear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFFFF"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif"
+            android:layout_marginEnd="12dp" />
 
+        <TextView
+            android:id="@+id/tvThidi"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#FFFFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="start" />
+    </LinearLayout>
 
-    <!-- Festivals today (increase font) -->
     <TextView
         android:id="@+id/tvFestivals"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#ffd74f"
-        android:textSize="25sp"
+        android:textColor="#ffd54f"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:lineSpacingExtra="2dp"
-        android:fontFamily="sans-serif"
-        android:gravity="center"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="start"
         android:paddingTop="4dp"
         android:paddingBottom="2dp"
+        android:maxLines="3"
+        android:ellipsize="end"
         android:visibility="gone" />
 
-    <!-- Next two days (optional) -->
     <TextView
         android:id="@+id/tvNext"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="#FFFFFFFF"
-        android:textSize="15sp"
-        android:lineSpacingExtra="2dp"
+        android:textSize="13sp"
         android:fontFamily="sans-serif"
-        android:gravity="center"
+        android:gravity="start"
         android:paddingTop="6dp"
         android:paddingBottom="2dp"
+        android:maxLines="2"
+        android:ellipsize="end"
         android:visibility="gone" />
 
 </LinearLayout>
