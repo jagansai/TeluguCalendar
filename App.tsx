@@ -1,5 +1,3 @@
-
-
 function getTodayAndNextTwoDates(): string[] {
   const today = new Date();
   const pad = (n: number) => n.toString().padStart(2, '0');
@@ -7,22 +5,33 @@ function getTodayAndNextTwoDates(): string[] {
     `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   return [
     format(today),
-    format(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)),
-    format(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)),
+    format(
+      new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1),
+    ),
+    format(
+      new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2),
+    ),
   ];
 }
 
-
-
-
-
-
-
-import { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, PermissionsAndroid } from "react-native";
+import { useEffect, useState } from 'react';
+import {
+  StatusBar,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
+  Platform,
+  PermissionsAndroid,
+} from 'react-native';
 import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import notifee, { TimestampTrigger, TriggerType, AndroidImportance, AndroidColor } from '@notifee/react-native';
+import notifee, {
+  TimestampTrigger,
+  TriggerType,
+  AndroidImportance,
+  AndroidColor,
+} from '@notifee/react-native';
 import WidgetView from './src/components/WidgetView';
 import { formatTeluguDateFromIso } from './src/utils/teluguDate';
 
@@ -49,13 +58,22 @@ async function setupNotifee(todayFestivals: string[]) {
 
   // Schedule notification for 6AM
   const now = new Date();
-  let sixAM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0, 0);
+  let sixAM = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    6,
+    0,
+    0,
+    0,
+  );
   if (now > sixAM) {
     sixAM.setDate(sixAM.getDate() + 1);
   }
-  const message = todayFestivals.length > 0
-    ? `Today's festivals: ${todayFestivals.join(', ')}`
-    : 'No festivals today.';
+  const message =
+    todayFestivals.length > 0
+      ? `Today's festivals: ${todayFestivals.join(', ')}`
+      : 'No festivals today.';
   const trigger: TimestampTrigger = {
     type: TriggerType.TIMESTAMP,
     timestamp: sixAM.getTime(),
@@ -73,13 +91,21 @@ async function setupNotifee(todayFestivals: string[]) {
         pressAction: { id: 'default' },
       },
     },
-    trigger
+    trigger,
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: 'transparent' },
-  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 18, marginTop: 12, textAlign: 'center', color: '#222', letterSpacing: 0.5 }
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 18,
+    marginTop: 12,
+    textAlign: 'center',
+    color: '#222',
+    letterSpacing: 0.5,
+  },
 });
 
 type FestivalDay = {
@@ -97,7 +123,7 @@ const App = () => {
   const [canPin, setCanPin] = useState(false);
 
   useEffect(() => {
-  async function setup() {
+    async function setup() {
       // Request notification permission for Android 13+
       if (Platform.OS === 'android' && Platform.Version >= 33) {
         try {
@@ -105,10 +131,11 @@ const App = () => {
             'android.permission.POST_NOTIFICATIONS',
             {
               title: 'Festival Notifications',
-              message: 'Allow Telugu Festival Reminder to send you daily festival notifications?',
+              message:
+                'Allow Telugu Festival Reminder to send you daily festival notifications?',
               buttonPositive: 'Allow',
               buttonNegative: 'Deny',
-            }
+            },
           );
         } catch (err) {
           // ignore
@@ -139,7 +166,10 @@ const App = () => {
       try {
         const dismissed = await AsyncStorage.getItem('widgetHintDismissed');
         let supported = false;
-        if (Platform.OS === 'android' && (NativeModules as any).WidgetPin?.isPinSupported) {
+        if (
+          Platform.OS === 'android' &&
+          (NativeModules as any).WidgetPin?.isPinSupported
+        ) {
           supported = await (NativeModules as any).WidgetPin.isPinSupported();
         }
         setCanPin(supported);
@@ -156,16 +186,20 @@ const App = () => {
     const match = day.date.match(/\((\d{4}-\d{2}-\d{2})\)/);
     if (!match) return false;
     const isNextTwo = wantedDates.slice(1).includes(match[1]);
-    return isNextTwo && Array.isArray(day.festivals) && day.festivals.length > 0;
+    return (
+      isNextTwo && Array.isArray(day.festivals) && day.festivals.length > 0
+    );
   });
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-  <Text style={styles.header}>Telugu Festival Reminder</Text>
+      <Text style={styles.header}>Telugu Festival Reminder</Text>
       {/* Widget UI moved to WidgetView component */}
       {error ? (
-        <Text style={{color: 'red', textAlign: 'center', marginTop: 20}}>{error}</Text>
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>
+          {error}
+        </Text>
       ) : (
         <WidgetView
           festivalDays={festivalDays}
@@ -188,6 +222,6 @@ const App = () => {
       )}
     </View>
   );
-}
+};
 
 export default App;

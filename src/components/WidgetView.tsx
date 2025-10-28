@@ -19,8 +19,6 @@ type Props = {
   onDismissHint?: () => Promise<void>;
 };
 
-// formatTeluguDateFromIso moved to src/utils/teluguDate.ts
-
 export default function WidgetView(props: Props) {
   const { festivalDays, nextTwoDaysWithFestivals, isDarkMode, showWidgetHint, canPin, onRequestPin, onDismissHint } = props;
 
