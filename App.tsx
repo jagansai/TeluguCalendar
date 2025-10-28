@@ -37,10 +37,11 @@ function formatTeluguDateFromIso(iso: string): string {
 
 
 import { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, PermissionsAndroid, Pressable } from "react-native";
+import { StatusBar, StyleSheet, Text, useColorScheme, View, Platform, PermissionsAndroid } from "react-native";
 import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import notifee, { TimestampTrigger, TriggerType, AndroidImportance, AndroidColor } from '@notifee/react-native';
+import WidgetView from './src/components/WidgetView';
 
 // Helper to create channel and schedule notification for 6 AM
 async function setupNotifee(todayFestivals: string[]) {
@@ -94,148 +95,8 @@ async function setupNotifee(todayFestivals: string[]) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  // Transparent to let inner translucent components be apparent
-  backgroundColor: 'transparent',
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  marginBottom: 18,
-  marginTop: 12,
-    textAlign: 'center',
-  color: '#222222',
-    letterSpacing: 0.5
-  },
-  card: {
-    marginBottom: 20,
-    padding: 20,
-    borderRadius: 14,
-  // Soft translucent card background
-  backgroundColor: 'rgba(255, 248, 225, 0.9)',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.13,
-    shadowRadius: 6,
-    alignItems: 'center',
-    borderWidth: 1,
-  borderColor: 'rgba(255, 224, 130, 0.6)'
-  },
-  cardDate: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ff6f00',
-    marginBottom: 8
-  },
-  cardThidi: {
-  fontSize: 16,
-  color: '#333',
-  marginBottom: 2,
-  width: '100%',
-  textAlign: 'left',
-  lineHeight: 24,
-  paddingVertical: 2,
-  includeFontPadding: true
-  },
-  cardThidiValue: {
-    fontWeight: 'bold',
-    color: '#1976d2'
-  },
-  cardYear: {
-  fontSize: 16,
-  color: '#333',
-  marginBottom: 8,
-  width: '100%',
-  textAlign: 'left',
-  lineHeight: 22,
-  paddingVertical: 2,
-  includeFontPadding: true
-  },
-  cardYearValue: {
-    fontWeight: 'bold',
-    color: '#388e3c'
-  },
-  festivalList: {
-    marginTop: 6,
-    width: '100%',
-    alignItems: 'center'
-  },
-  festivalItem: {
-    fontSize: 16,
-  color: '#ff0000',
-    marginBottom: 2
-  },
-  noFestival: {
-    fontSize: 15,
-    color: '#888',
-    marginTop: 8,
-    fontStyle: 'italic'
-  },
-  error: {
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  upcomingBox: {
-    marginTop: 18,
-    padding: 14,
-    borderRadius: 10,
-  backgroundColor: 'rgba(227, 242, 253, 0.9)',
-    alignItems: 'center',
-    borderWidth: 1,
-  borderColor: 'rgba(144, 202, 249, 0.6)',
-    shadowColor: '#1976d2',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3
-  },
-  // Subtle translucent gray chrome to hint this is a widget container
-  widgetChrome: {
-  backgroundColor: 'rgba(0,0,0,0.12)',
-    borderRadius: 16,
-    padding: 8,
-  borderWidth: 1,
-  borderColor: 'rgba(0,0,0,0.15)'
-  },
-  upcomingLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1976d2',
-    marginBottom: 6,
-    letterSpacing: 0.2
-  },
-  upcomingList: {
-    width: '100%',
-    alignItems: 'center'
-  },
-  upcomingValue: {
-    fontSize: 15,
-    color: '#1976d2',
-    marginBottom: 2
-  },
-  dateText: {
-    fontSize: 15,
-    color: '#1976d2',
-    marginBottom: 2
-  },
-  hint: {
-    backgroundColor: '#e8f5e9',
-    borderColor: '#a5d6a7',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12
-  },
-  hintTitle: { fontWeight: 'bold', color: '#2e7d32', marginBottom: 4 },
-  hintBody: { color: '#2e7d32', marginBottom: 8 },
-  hintActions: { flexDirection: 'row' },
-  hintButton: { backgroundColor: '#2e7d32', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, marginRight: 8 },
-  hintButtonText: { color: 'white', fontWeight: '600' },
-  hintDismiss: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#2e7d32' },
-  hintDismissText: { color: '#2e7d32', fontWeight: '600' }
+  container: { flex: 1, padding: 16, backgroundColor: 'transparent' },
+  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 18, marginTop: 12, textAlign: 'center', color: '#222', letterSpacing: 0.5 }
 });
 
 type FestivalDay = {
@@ -272,7 +133,7 @@ const App = () => {
       }
       try {
         // Use require to load the bundled JSON asset. Expect 'festivals.json' to be present.
-        let allDays: FestivalDay[] = require('./assets/festivals.json')
+        let allDays: FestivalDay[] = require('./assets/festivals.json');
         const wantedDates = getTodayAndNextTwoDates();
         // Extract the (YYYY-MM-DD) part from the date string in JSON
         // Only show the current day
@@ -306,7 +167,7 @@ const App = () => {
   }, []);
 
   // Compute next-2-days entries that actually have festivals
-  const allDays: FestivalDay[] = require('./assets/festivals.json')
+  const allDays: FestivalDay[] = require('./assets/festivals.json');
   const wantedDates = getTodayAndNextTwoDates();
   const nextTwoDaysWithFestivals = allDays.filter(day => {
     const match = day.date.match(/\((\d{4}-\d{2}-\d{2})\)/);
@@ -319,93 +180,28 @@ const App = () => {
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
   <Text style={styles.header}>Telugu Festival Reminder</Text>
-      {showWidgetHint && (
-        <View style={styles.hint}>
-          <Text style={styles.hintTitle}>Add the home screen widget</Text>
-          <Text style={styles.hintBody}>
-            Get today’s Telugu festivals at a glance. Add the “Telugu Festival Reminder” widget to your home screen.
-          </Text>
-          <View style={styles.hintActions}>
-            {canPin && (
-              <Pressable
-                onPress={async () => {
-                  try {
-                    await (NativeModules as any).WidgetPin.requestPin();
-                    await AsyncStorage.setItem('widgetHintDismissed', '1');
-                    setShowWidgetHint(false);
-                  } catch {}
-                }}
-                style={styles.hintButton}
-              >
-                <Text style={styles.hintButtonText}>Add widget</Text>
-              </Pressable>
-            )}
-            <Pressable
-              onPress={async () => {
-                await AsyncStorage.setItem('widgetHintDismissed', '1');
-                setShowWidgetHint(false);
-              }}
-              style={[styles.hintButton, styles.hintDismiss]}
-            >
-              <Text style={styles.hintDismissText}>Not now</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
+      {/* Widget UI moved to WidgetView component */}
       {error ? (
-        <Text style={styles.error}>{error}</Text>
+        <Text style={{color: 'red', textAlign: 'center', marginTop: 20}}>{error}</Text>
       ) : (
-        festivalDays.length > 0 && (
-          <View style={styles.widgetChrome}>
-            <View style={styles.card}>
-              {/* Today block with Telugu labels */}
-              {/* Show Telugu formatted date (e.g. 18 ఆగస్టు, 2025 (2025-08-18)) */}
-              <Text style={styles.cardDate}>
-                ఈ రోజు: {(() => {
-                  const raw = String(festivalDays[0].date || '');
-                  const match = raw.match(/\((\d{4}-\d{2}-\d{2})\)/);
-                  const iso = match ? match[1] : raw.match(/\d{4}-\d{2}-\d{2}/)?.[0] || raw;
-                  return formatTeluguDateFromIso(iso);
-                })()}
-              </Text>
-              <Text style={styles.cardYear}>సం: {String(festivalDays[0].year || '')}</Text>
-              <Text style={styles.cardThidi}>తిథి: {String(festivalDays[0].Thidi || '')}</Text>
-
-              {/* Only show header and list if there are any festivals today */}
-              {festivalDays[0].festivals.length > 0 && (
-                <View style={styles.festivalList}>
-                  <Text style={styles.upcomingLabel}>పండుగలు:</Text>
-                  {festivalDays[0].festivals.map(fest => (
-                    <Text key={fest} style={styles.festivalItem}>🎉 {fest}</Text>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            {/* Next 2 days: show only entries that have at least one festival */}
-            {nextTwoDaysWithFestivals.length > 0 && (
-              <View style={styles.upcomingBox}>
-                <Text style={styles.upcomingLabel}>రాబోయే పండుగలు (2 రోజుల్లో):</Text>
-                <View style={styles.upcomingList}>
-                  {nextTwoDaysWithFestivals.map(day => (
-                    <Text key={day.date} style={styles.upcomingValue}>
-                      {(() => {
-                        const raw = String(day.date || '')
-                        const match = raw.match(/\((\d{4}-\d{2}-\d{2})\)/)
-                        const iso = match ? match[1] : raw.match(/\d{4}-\d{2}-\d{2}/)?.[0] || raw
-                        const dateText = formatTeluguDateFromIso(iso)
-                        const fest = day.festivals[0]
-                        return (
-                          <>{dateText}: <Text style={{color: '#ff0000'}}>{fest}</Text></>
-                        )
-                      })()}
-                    </Text>
-                  ))}
-                </View>
-              </View>
-            )}
-          </View>
-        )
+        <WidgetView
+          festivalDays={festivalDays}
+          nextTwoDaysWithFestivals={nextTwoDaysWithFestivals}
+          isDarkMode={isDarkMode}
+          showWidgetHint={showWidgetHint}
+          canPin={canPin}
+          onRequestPin={async () => {
+            try {
+              await (NativeModules as any).WidgetPin.requestPin();
+              await AsyncStorage.setItem('widgetHintDismissed', '1');
+              setShowWidgetHint(false);
+            } catch {}
+          }}
+          onDismissHint={async () => {
+            await AsyncStorage.setItem('widgetHintDismissed', '1');
+            setShowWidgetHint(false);
+          }}
+        />
       )}
     </View>
   );
