@@ -12,23 +12,7 @@ function getTodayAndNextTwoDates(): string[] {
   ];
 }
 // Format ISO date (YYYY-MM-DD) to Telugu: "D MonthName, YYYY (YYYY-MM-DD)"
-function formatTeluguDateFromIso(iso: string): string {
-  try {
-    const [y, m, d] = iso.split('-').map(s => parseInt(s, 10));
-    const months = [
-      'జనవరు', 'ఫిబ్రవరి', 'మార్చి', 'ఏప్రిల్', 'మే', 'జూన్',
-      'జూలై', 'ఆగస్టు', 'సెప్టెంబర్', 'అక్టోబర్', 'నవంబర్', 'డిసెంబర్'
-    ];
-    const weekdays = ['ఆది', 'సోమ', 'మంగళ', 'బుధ', 'గురు', 'శుక్ర', 'శని'];
-    const day = d;
-    const monthName = months[m - 1] || '';
-    const wk = new Date(iso).getDay(); // 0=Sun
-    const shortWeek = weekdays[wk] || '';
-    return `${day} ${monthName}, ${y} (${shortWeek})`;
-  } catch (e) {
-    return iso;
-  }
-}
+// formatTeluguDateFromIso moved to shared util
 // ...existing code...
 
 
@@ -42,6 +26,7 @@ import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import notifee, { TimestampTrigger, TriggerType, AndroidImportance, AndroidColor } from '@notifee/react-native';
 import WidgetView from './src/components/WidgetView';
+import { formatTeluguDateFromIso } from './src/utils/teluguDate';
 
 // Helper to create channel and schedule notification for 6 AM
 async function setupNotifee(todayFestivals: string[]) {
