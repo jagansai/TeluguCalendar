@@ -11,9 +11,7 @@ function getTodayAndNextTwoDates(): string[] {
     format(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)),
   ];
 }
-// Format ISO date (YYYY-MM-DD) to Telugu: "D MonthName, YYYY (YYYY-MM-DD)"
-// formatTeluguDateFromIso moved to shared util
-// ...existing code...
+
 
 
 
