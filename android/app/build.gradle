@@ -88,7 +88,7 @@ android {
         applicationId "com.telugufestivalreminderclean"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
+        versionCode 3
         versionName "1.2.0"
     }
     def hasUploadCreds = project.hasProperty('MYAPP_UPLOAD_STORE_FILE') &&
