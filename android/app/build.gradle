@@ -89,7 +89,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 2
-        versionName "1.1.0"
+        versionName "1.2.0"
     }
     def hasUploadCreds = project.hasProperty('MYAPP_UPLOAD_STORE_FILE') &&
             project.hasProperty('MYAPP_UPLOAD_KEY_ALIAS') &&
@@ -140,8 +140,19 @@ dependencies {
 // Copy the single-source festivals JSON into the Android assets for the widget before building
 def repoRoot = rootDir.parentFile
 tasks.register('copyFestivalJson', Copy) {
-    from file("${repoRoot}/assets/festivals2025.json")
-    into file("${projectDir}/src/main/assets")
+    def canonical = file("${repoRoot}/assets/festivals.json")
+    def fallback = file("${repoRoot}/assets/te_festivals2025.json")
+    def sourceFile = canonical.exists() ? canonical : fallback
+    if (!sourceFile.exists()) {
+        throw new RuntimeException("No festival data found. Run scripts/build-android.ps1 -FestivalsToken te_festivals first or add ${fallback.name}.")
+    }
+    from(sourceFile)
+    rename { 'festivals.json' }
+    into(file("${projectDir}/src/main/assets"))
+    doLast {
+        def legacy = file("${projectDir}/src/main/assets/festivals2025.json")
+        if (legacy.exists()) { legacy.delete() }
+    }
 }
 
 preBuild.dependsOn copyFestivalJson

@@ -17,11 +17,10 @@ object WidgetUtils {
         val nextLines: List<String>
     )
     fun readFestivalData(context: Context): List<FestivalDay> {
-        // Prefer merged 'festivals.json' if present (produced by build script), otherwise fall back to year-specific file
         val json = try {
             context.assets.open("festivals.json").bufferedReader().use { it.readText() }
         } catch (e: Exception) {
-            context.assets.open("festivals2025.json").bufferedReader().use { it.readText() }
+            throw IllegalStateException("festivals.json not found in assets. Run scripts/build-android.ps1 -FestivalsToken te_festivals before building.", e)
         }
         val type = object : TypeToken<List<FestivalDay>>() {}.type
         return Gson().fromJson(json, type)

@@ -11,15 +11,45 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repo = Split-Path -Parent $root
 
+function Get-FestivalSourceFiles {
+  param(
+    [string]$RepoRoot,
+    [string]$Token
+  )
+
+  $assetsDir = Join-Path $RepoRoot 'assets'
+  $normalized = $Token -replace '\\','/'
+  $segments = $normalized.Trim('/') -split '/'
+  $prefix = $segments[-1]
+  if ($segments.Length -gt 1) {
+    $subDir = ($segments[0..($segments.Length-2)] -join [System.IO.Path]::DirectorySeparatorChar)
+    $searchDir = Join-Path $assetsDir $subDir
+  } else {
+    $searchDir = $assetsDir
+  }
+  if (-not (Test-Path $searchDir)) { return @() }
+  Get-ChildItem -Path $searchDir -Filter "${prefix}*.json" -File | Sort-Object FullName
+}
+
+function Sort-FestivalEntries {
+  param([object[]]$Entries)
+  $entries | Sort-Object {
+    $dateField = $_.date
+    $match = [regex]::Match([string]$dateField, '\((\d{4}-\d{2}-\d{2})\)')
+    if ($match.Success) { return $match.Groups[1].Value }
+    return [string]$dateField
+  }
+}
+
 if ($FestivalsToken) {
   Write-Host "Merging festival files for token: $FestivalsToken"
-  $pattern = "$repo/assets/${FestivalsToken}*.json"
-  $files = Get-ChildItem -Path $repo\assets -Filter "${FestivalsToken}*.json" -File | Sort-Object Name
-  if ($files.Count -eq 0) { Write-Warning "No festival files found for token '$FestivalsToken'. Falling back to festivals2025.json." }
-  else {
+  $files = Get-FestivalSourceFiles -RepoRoot $repo -Token $FestivalsToken
+  if ($files.Count -eq 0) {
+    Write-Warning "No festival files found for token '$FestivalsToken'. Skipping merge."
+  } else {
     $all = @()
     foreach ($f in $files) {
-      Write-Host "  - loading $($f.Name)"
+      Write-Host "  - loading $($f.FullName.Replace("$repo\\",''))"
       $txt = Get-Content $f.FullName -Raw
       try {
         $arr = ConvertFrom-Json $txt
@@ -29,13 +59,22 @@ if ($FestivalsToken) {
         Write-Warning "Failed to parse $($f.Name): $_"
       }
     }
-    # Write merged to repo assets as festivals.json so app can require it
+    $sorted = Sort-FestivalEntries -Entries $all
+
     $outPath = Join-Path $repo 'assets/festivals.json'
-    $json = $all | ConvertTo-Json -Depth 10
+    $json = $sorted | ConvertTo-Json -Depth 10
     Set-Content -Path $outPath -Value $json -Encoding UTF8
     Write-Host "Wrote merged festivals to $outPath"
-    # Also copy to android assets
-    Copy-Item -Force -Path $outPath -Destination "$repo/android/app/src/main/assets/festivals.json"
+
+    $androidAssetDir = Join-Path $repo 'android/app/src/main/assets'
+    if (-not (Test-Path $androidAssetDir)) { New-Item -ItemType Directory -Path $androidAssetDir | Out-Null }
+    Copy-Item -Force -Path $outPath -Destination (Join-Path $androidAssetDir 'festivals.json')
+
+    $legacyFile = Join-Path $androidAssetDir 'festivals2025.json'
+    if (Test-Path $legacyFile) {
+      Remove-Item -Force $legacyFile
+      Write-Host "Removed legacy asset $legacyFile"
+    }
   }
 } else {
   Write-Host "Copying festivals2025.json to Android assets..."

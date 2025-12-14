@@ -2,5 +2,6 @@
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.compile.nullAnalysis.mode": "automatic",
     "editor.rename.enablePreview": false,
-    "workbench.editor.enablePreview": false
+    "workbench.editor.enablePreview": false,
+    "chat.agent.maxRequests": 999
 }

@@ -10,12 +10,12 @@ This app reminds users of upcoming Telugu festivals. Main features include:
 ## Step 1: Start Metro
 
 Clone the project and on windows / Linux, install powershell.  
-Run for e.g., `scripts/deploy-android.ps1 Release -Format apk -FestivalsToken telugu/festivals`
+Run for e.g., `pwsh -File scripts/build-android.ps1 -FestivalsToken te_festivals`
 
 
 #### Android build with single-source JSON (widget sync)
 
-This script builds the Android app and copies the `assets/` folder to the right place for the widget to access it.
+`scripts/build-android.ps1` merges every `assets/te_festivals*.json` input into a single `assets/festivals.json`, copies that file into `android/app/src/main/assets/festivals.json`, and then runs Gradle so both the React Native bundle and the widget read the very same data.
 
 ```sh
 
