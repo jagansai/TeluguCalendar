@@ -77,5 +77,6 @@ yarn-error.log
 # Festival JSON files: keep te_festivals2025.json under source control, ignore other generated festival variants
 assets/te_festivals*.json
 !assets/te_festivals2025.json
+!assets/te_festivals2026.json
 assets/festivals.json
 android/app/src/main/assets/festivals*.json
