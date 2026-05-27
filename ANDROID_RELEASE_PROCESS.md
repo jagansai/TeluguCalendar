@@ -16,7 +16,7 @@ Increment the version number following semantic versioning (major.minor.patch).
 ```json
 {
   "name": "TeluguFestivalReminderClean",
-  "version": "1.2.1",  // ← Update this (e.g., 1.2.0 → 1.2.1)
+  "version": "1.2.4",  // ← Update this (e.g., 1.2.3 → 1.2.4)
   "private": true,
   ...
 }
@@ -40,8 +40,8 @@ android {
         applicationId "com.telugufestivalreminderclean"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4           // ← Increment by 1 (e.g., 3 → 4) - REQUIRED
-        versionName "1.2.1"     // ← Match package.json version
+        versionCode 7           // ← Increment by 1 (e.g., 6 → 7) - REQUIRED
+        versionName "1.2.4"     // ← Match package.json version
     }
     ...
 }
@@ -84,9 +84,9 @@ Use the build script to create a release AAB (Android App Bundle) for Play Store
 
 ## Quick Reference Checklist
 
-- [ ] Update `package.json` version (e.g., 1.2.0 → 1.2.1)
-- [ ] Update `android/app/build.gradle` versionCode (e.g., 3 → 4)
-- [ ] Update `android/app/build.gradle` versionName (e.g., "1.2.0" → "1.2.1")
+- [ ] Update `package.json` version (e.g., 1.2.3 → 1.2.4)
+- [ ] Update `android/app/build.gradle` versionCode (e.g., 6 → 7)
+- [ ] Update `android/app/build.gradle` versionName (e.g., "1.2.3" → "1.2.4")
 - [ ] Run build command: `.\scripts\build-android.ps1 -Release -FestivalsToken <token>`
 - [ ] Verify AAB created: `android/app/build/outputs/bundle/release/app-release.aab`
 - [ ] Upload AAB to Google Play Console
@@ -98,15 +98,15 @@ Use the build script to create a release AAB (Android App Bundle) for Play Store
 **Scenario:** Updating festival data for 2026
 
 1. **Version Update:**
-   - Current: 1.2.0 (versionCode 3)
-   - New: 1.2.1 (versionCode 4)
+   - Current: 1.2.3 (versionCode 6)
+   - New: 1.2.4 (versionCode 7)
 
 2. **Files to Edit:**
    ```
-   package.json:          "version": "1.2.1"
+   package.json:          "version": "1.2.4"
    android/app/build.gradle:
-     versionCode 4
-     versionName "1.2.1"
+     versionCode 7
+     versionName "1.2.4"
    ```
 
 3. **Build Command:**
