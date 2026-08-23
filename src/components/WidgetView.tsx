@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { formatTeluguDateFromIso } from '../utils/teluguDate';
+import language from '../languages/selected';
+import { formatDateFromIso } from '../utils/date';
 
 type FestivalDay = {
   date: string;
@@ -20,22 +21,22 @@ type Props = {
 };
 
 export default function WidgetView(props: Props) {
-  const { festivalDays, nextTwoDaysWithFestivals, isDarkMode, showWidgetHint, canPin, onRequestPin, onDismissHint } = props;
+  const { festivalDays, nextTwoDaysWithFestivals, showWidgetHint, canPin, onRequestPin, onDismissHint } = props;
 
   return (
     <View style={styles.widgetChrome}>
       {showWidgetHint && (
         <View style={styles.hint}>
-          <Text style={styles.hintTitle}>Add the home screen widget</Text>
-          <Text style={styles.hintBody}>Get today’s Telugu festivals at a glance. Add the “Telugu Festival Reminder” widget to your home screen.</Text>
+          <Text style={styles.hintTitle}>{language.widgetHintTitle}</Text>
+          <Text style={styles.hintBody}>{language.widgetHintBody}</Text>
           <View style={styles.hintActions}>
             {canPin && (
               <Pressable onPress={onRequestPin} style={styles.hintButton}>
-                <Text style={styles.hintButtonText}>Add widget</Text>
+                <Text style={styles.hintButtonText}>{language.addWidget}</Text>
               </Pressable>
             )}
             <Pressable onPress={onDismissHint} style={[styles.hintButton, styles.hintDismiss]}>
-              <Text style={styles.hintDismissText}>Not now</Text>
+              <Text style={styles.hintDismissText}>{language.notNow}</Text>
             </Pressable>
           </View>
         </View>
@@ -44,19 +45,19 @@ export default function WidgetView(props: Props) {
       {festivalDays.length > 0 ? (
         <View style={styles.card}>
           <Text style={styles.cardDate}>
-            ఈ రోజు: {(() => {
+            {language.today}: {(() => {
               const raw = String(festivalDays[0].date || '');
               const match = raw.match(/\((\d{4}-\d{2}-\d{2})\)/);
               const iso = match ? match[1] : raw.match(/\d{4}-\d{2}-\d{2}/)?.[0] || raw;
-              return formatTeluguDateFromIso(iso);
+              return formatDateFromIso(iso, language);
             })()}
           </Text>
-          <Text style={styles.cardYear}>సం: {String(festivalDays[0].year || '')}</Text>
-          <Text style={styles.cardThidi}>తిథి: {String(festivalDays[0].Thidi || '')}</Text>
+          <Text style={styles.cardYear}>{language.year}: {String(festivalDays[0].year || '')}</Text>
+          <Text style={styles.cardThidi}>{language.thidi}: {String(festivalDays[0].Thidi || '')}</Text>
 
           {festivalDays[0].festivals.length > 0 && (
             <View style={styles.festivalList}>
-              <Text style={styles.upcomingLabel}>పండుగలు:</Text>
+              <Text style={styles.upcomingLabel}>{language.festivals}:</Text>
               {festivalDays[0].festivals.map(fest => (
                 <Text key={fest} style={styles.festivalItem}>🎉 {fest}</Text>
               ))}
@@ -64,12 +65,12 @@ export default function WidgetView(props: Props) {
           )}
         </View>
       ) : (
-        <Text style={styles.noFestival}>No festival data available.</Text>
+        <Text style={styles.noFestival}>{language.noFestivalData}</Text>
       )}
 
       {nextTwoDaysWithFestivals.length > 0 && (
         <View style={styles.upcomingBox}>
-          <Text style={styles.upcomingLabel}>రాబోయే పండుగలు (2 రోజుల్లో):</Text>
+          <Text style={styles.upcomingLabel}>{language.upcoming}:</Text>
           <View style={styles.upcomingList}>
             {nextTwoDaysWithFestivals.map(day => (
               <Text key={day.date} style={styles.upcomingValue}>
@@ -77,7 +78,7 @@ export default function WidgetView(props: Props) {
                   const raw = String(day.date || '');
                   const match = raw.match(/\((\d{4}-\d{2}-\d{2})\)/);
                   const iso = match ? match[1] : raw.match(/\d{4}-\d{2}-\d{2}/)?.[0] || raw;
-                  const dateText = formatTeluguDateFromIso(iso);
+                  const dateText = formatDateFromIso(iso, language);
                   const fest = day.festivals[0];
                   return (<>{dateText}: <Text style={{color: '#ff0000'}}>{fest}</Text></>);
                 })()}

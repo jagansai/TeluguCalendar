@@ -10,7 +10,8 @@ This app reminds users of upcoming Telugu festivals. Main features include:
 ## Step 1: Start Metro
 
 Clone the project and on windows / Linux, install powershell.  
-Run for e.g., `pwsh -File scripts/build-android.ps1 -FestivalsToken te_festivals`
+Run a language-specific build with `npm run android:build:te`, `npm run android:build:hi`, or `npm run android:build:ta`.
+The selected language is used by both the React Native screen and the native home-screen widget.
 
 
 #### Android build with single-source JSON (widget sync)

@@ -88,8 +88,8 @@ android {
         applicationId "com.telugufestivalreminderclean"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
-        versionName "1.2.4"
+        versionCode 8
+        versionName "1.2.5"
     }
     def hasUploadCreds = project.hasProperty('MYAPP_UPLOAD_STORE_FILE') &&
             project.hasProperty('MYAPP_UPLOAD_KEY_ALIAS') &&
@@ -137,18 +137,23 @@ dependencies {
     }
 }
 
-// Copy the single-source festivals JSON into the Android assets for the widget before building
+// Copy the selected festival and locale assets into Android assets before building.
 def repoRoot = rootDir.parentFile
 tasks.register('copyFestivalJson', Copy) {
     def canonical = file("${repoRoot}/assets/festivals.json")
-    def fallback = file("${repoRoot}/assets/te_festivals2025.json")
-    def sourceFile = canonical.exists() ? canonical : fallback
+    def sourceFile = canonical
     if (!sourceFile.exists()) {
-        throw new RuntimeException("No festival data found. Run scripts/build-android.ps1 -FestivalsToken te_festivals first or add ${fallback.name}.")
+        throw new RuntimeException("No festival data found. Run scripts/build-android.ps1 with a language selection first.")
     }
     from(sourceFile)
     rename { 'festivals.json' }
     into(file("${projectDir}/src/main/assets"))
+    doFirst {
+        def locale = file("${projectDir}/src/main/assets/locale.json")
+        if (!locale.exists()) {
+            throw new RuntimeException("No locale.json found. Run scripts/build-android.ps1 with a language selection first.")
+        }
+    }
     doLast {
         def legacy = file("${projectDir}/src/main/assets/festivals2025.json")
         if (legacy.exists()) { legacy.delete() }

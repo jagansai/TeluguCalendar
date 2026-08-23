@@ -1,10 +1,13 @@
 {
   "name": "TeluguFestivalReminderClean",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
     "android:build": "pwsh -File ./scripts/build-android.ps1",
+    "android:build:te": "pwsh -File ./scripts/build-android.ps1 -Language te",
+    "android:build:hi": "pwsh -File ./scripts/build-android.ps1 -Language hi",
+    "android:build:ta": "pwsh -File ./scripts/build-android.ps1 -Language ta",
     "android:build:release": "pwsh -File ./scripts/build-android.ps1 -Release",
     "ios": "react-native run-ios",
     "lint": "eslint .",

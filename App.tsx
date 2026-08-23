@@ -33,20 +33,20 @@ import notifee, {
   AndroidColor,
 } from '@notifee/react-native';
 import WidgetView from './src/components/WidgetView';
-import { formatTeluguDateFromIso } from './src/utils/teluguDate';
+import language from './src/languages/selected';
 
 // Helper to create channel and schedule notification for 6 AM
 async function setupNotifee(todayFestivals: string[]) {
   // Create channel (Android)
   await notifee.createChannel({
     id: 'festival-reminder',
-    name: 'Festival Reminder',
+    name: language.notificationChannelName,
     importance: AndroidImportance.HIGH,
     lights: true,
     vibration: true,
     badge: true,
     sound: 'default',
-    description: 'Daily festival notifications',
+    description: language.notificationChannelDescription,
     lightColor: AndroidColor.PURPLE,
   });
 
@@ -72,8 +72,8 @@ async function setupNotifee(todayFestivals: string[]) {
   }
   const message =
     todayFestivals.length > 0
-      ? `Today's festivals: ${todayFestivals.join(', ')}`
-      : 'No festivals today.';
+      ? `${language.notificationToday}: ${todayFestivals.join(', ')}`
+      : language.notificationNoFestivals;
   const trigger: TimestampTrigger = {
     type: TriggerType.TIMESTAMP,
     timestamp: sixAM.getTime(),
@@ -127,12 +127,11 @@ const App = () => {
       // Request notification permission for Android 13+
       if (Platform.OS === 'android' && Platform.Version >= 33) {
         try {
-          const granted = await PermissionsAndroid.request(
+          await PermissionsAndroid.request(
             'android.permission.POST_NOTIFICATIONS',
             {
-              title: 'Festival Notifications',
-              message:
-                'Allow Telugu Festival Reminder to send you daily festival notifications?',
+              title: language.notificationPermissionTitle,
+              message: language.notificationPermissionMessage,
               buttonPositive: 'Allow',
               buttonNegative: 'Deny',
             },
@@ -194,7 +193,7 @@ const App = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <Text style={styles.header}>Telugu Festival Reminder</Text>
+      <Text style={styles.header}>{language.appTitle}</Text>
       {/* Widget UI moved to WidgetView component */}
       {error ? (
         <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>

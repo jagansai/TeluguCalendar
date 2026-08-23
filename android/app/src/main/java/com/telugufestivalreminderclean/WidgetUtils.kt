@@ -9,6 +9,16 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 object WidgetUtils {
+    data class LocaleConfig(
+        val today: String,
+        val year: String,
+        val thidi: String,
+        val festivals: String,
+        val noFestivalData: String,
+        val months: List<String>,
+        val weekdays: List<String>
+    )
+
     data class WidgetInfo(
         val date: String,
         val thidi: String,
@@ -20,11 +30,22 @@ object WidgetUtils {
         val json = try {
             context.assets.open("festivals.json").bufferedReader().use { it.readText() }
         } catch (e: Exception) {
-            throw IllegalStateException("festivals.json not found in assets. Run scripts/build-android.ps1 -FestivalsToken te_festivals before building.", e)
+            throw IllegalStateException("festivals.json not found in assets. Run scripts/build-android.ps1 with a language selection before building.", e)
         }
         val type = object : TypeToken<List<FestivalDay>>() {}.type
         return Gson().fromJson(json, type)
     }
+
+    private fun readLocale(context: Context): LocaleConfig {
+        val json = try {
+            context.assets.open("locale.json").bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            throw IllegalStateException("locale.json not found in assets. Run scripts/build-android.ps1 with a language selection before building.", e)
+        }
+        return Gson().fromJson(json, LocaleConfig::class.java)
+    }
+
+    fun getLabels(context: Context): LocaleConfig = readLocale(context)
 
     private fun getTodayAndNextTwoDates(): List<String> {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -38,6 +59,7 @@ object WidgetUtils {
 
     fun getUpcomingFestivals(context: Context): String {
         val allDays = readFestivalData(context)
+        val language = readLocale(context)
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val today = LocalDate.now()
@@ -57,11 +79,11 @@ object WidgetUtils {
             val thidi = todayDay.Thidi
             val year = todayDay.year
             val iso = extractIsoDate(todayDay.date) ?: todayIso
-            lines += "ఈ రోజు: ${formatTeluguDateFromIso(iso)}"
-            lines += "సం: ${year}"
-            lines += "తిథి: ${thidi}"
+            lines += "${language.today}: ${formatDateFromIso(iso, language)}"
+            lines += "${language.year}: ${year}"
+            lines += "${language.thidi}: ${thidi}"
             if (todayFestivals.isNotEmpty()) {
-                lines += "పండుగలు: " + todayFestivals.joinToString(", ")
+                lines += "${language.festivals}: " + todayFestivals.joinToString(", ")
             }
         }
 
@@ -73,17 +95,18 @@ object WidgetUtils {
                 if (fests.isNotEmpty()) {
                     // Show as: formatted date: first festival
                     val iso = extractIsoDate(d.date) ?: iso
-                    lines += "${formatTeluguDateFromIso(iso)}: ${fests.first()}"
+                    lines += "${formatDateFromIso(iso, language)}: ${fests.first()}"
                 }
             }
         }
 
         return if (lines.isNotEmpty()) lines.joinToString("\n")
-        else "ఈ రోజు మరియు వచ్చే రెండు రోజుల్లో పండుగలు లేవు"
+        else language.noFestivalData
     }
 
     fun getWidgetInfo(context: Context): WidgetInfo {
         val allDays = readFestivalData(context)
+        val language = readLocale(context)
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val today = LocalDate.now()
@@ -95,7 +118,7 @@ object WidgetUtils {
             allDays.firstOrNull { extractIsoDate(it.date) == iso }
 
         val todayDay = findDayByIso(todayIso)
-        val dateStr = if (todayDay != null) formatTeluguDateFromIso(extractIsoDate(todayDay.date) ?: todayIso) else formatTeluguDateFromIso(todayIso)
+        val dateStr = if (todayDay != null) formatDateFromIso(extractIsoDate(todayDay.date) ?: todayIso, language) else formatDateFromIso(todayIso, language)
         val thidi = todayDay?.Thidi ?: ""
         val year = todayDay?.year ?: ""
         val todayFestivals = todayDay?.festivals?.filter { it.isNotBlank() } ?: emptyList()
@@ -107,7 +130,7 @@ object WidgetUtils {
                 val fests = d.festivals.filter { it.isNotBlank() }
                 if (fests.isNotEmpty()) {
                     val entryIso = extractIsoDate(d.date) ?: iso
-                    nextLines += "${formatTeluguDateFromIso(entryIso)}: ${fests.first()}"
+                    nextLines += "${formatDateFromIso(entryIso, language)}: ${fests.first()}"
                 }
             }
         }
@@ -121,21 +144,16 @@ object WidgetUtils {
         )
     }
 
-        private fun formatTeluguDateFromIso(iso: String): String {
+        private fun formatDateFromIso(iso: String, language: LocaleConfig): String {
             try {
                 val parts = iso.split('-')
                 val y = parts[0].toInt()
                 val m = parts[1].toInt()
                 val d = parts[2].toInt()
-                val months = listOf(
-                    "జనవరి", "ఫిబ్రవరి", "మార్చి", "ఏప్రిల్", "మే", "జూన్",
-                    "జూలై", "ఆగస్టు", "సెప్టెంబర్", "అక్టోబర్", "నవంబర్", "డిసెంబర్"
-                )
-                val monthName = months.getOrNull(m - 1) ?: ""
+                val monthName = language.months.getOrNull(m - 1) ?: ""
                 val cal = java.time.LocalDate.of(y, m, d)
                 val wk = cal.dayOfWeek.value % 7 // java: 1=Mon..7=Sun -> convert to 0=Sun
-                val weekdays = listOf("ఆది", "సోమ", "మంగళ", "బుధ", "గురు", "శుక్ర", "శని")
-                val shortWeek = weekdays.getOrNull(wk) ?: ""
+                val shortWeek = language.weekdays.getOrNull(wk) ?: ""
                 return "$d $monthName, $y ($shortWeek)"
             } catch (e: Exception) {
                 return iso

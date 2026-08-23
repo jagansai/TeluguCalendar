@@ -19,15 +19,16 @@ class FestivalWidgetProvider : AppWidgetProvider() {
         for (widgetId in widgetIds) {
             val views = RemoteViews(context.packageName, R.layout.festival_widget)
             // Date
-            views.setTextViewText(R.id.tvDate, "ఈ రోజు: ${info.date}")
+            val labels = WidgetUtils.getLabels(context)
+            views.setTextViewText(R.id.tvDate, "${labels.today}: ${info.date}")
             // Thidi
-            views.setTextViewText(R.id.tvThidi, "తిథి: ${info.thidi}")
+            views.setTextViewText(R.id.tvThidi, "${labels.thidi}: ${info.thidi}")
             // Year
-            views.setTextViewText(R.id.tvYear, "సం: ${info.year}")
+            views.setTextViewText(R.id.tvYear, "${labels.year}: ${info.year}")
             // Festivals today
             if (info.todayFestivals.isNotEmpty()) {
                 views.setViewVisibility(R.id.tvFestivals, android.view.View.VISIBLE)
-                val festivalsText = "పండుగలు: " + info.todayFestivals.joinToString(", ") { fest -> "<font color='#ffd74f'>${fest}</font>" }
+                val festivalsText = "${labels.festivals}: " + info.todayFestivals.joinToString(", ") { fest -> "<font color='#ffd74f'>${fest}</font>" }
                 val spanned = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Html.fromHtml(festivalsText, Html.FROM_HTML_MODE_LEGACY) else Html.fromHtml(festivalsText)
                 views.setTextViewText(R.id.tvFestivals, spanned)
             } else {
